@@ -30,12 +30,14 @@ theorem clusterTrialSum_le (positions bound : Nat)
             exact hbound start (Finset.mem_range.mp hmem)
     _ = positions * bound := by simp
 
--- An exact expectation comparison is equivalent to comparing
--- the sums when the number of possible cluster positions is equal.
-theorem expected_comparison_by_sums (positions : Nat)
-    (sieveHit randomHit : Nat → Nat)
-    (h : clusterTrialSum positions sieveHit ≤
-         clusterTrialSum positions randomHit) :
-    (clusterTrialSum positions sieveHit : Rat) / positions ≤
-    (clusterTrialSum positions randomHit : Rat) / positions := by
-  exact div_le_div_of_nonneg_right (exact_mod_cast h) (Nat.cast_nonneg positions)
+-- The numerator comparison needed for comparing two uniform averages.
+-- The rational-valued expectation is this sum divided by positions.
+theorem clusterTrialSum_compare (positions : Nat)
+    (sieveHit otherHit : Nat → Nat)
+    (h : ∀ start < positions, sieveHit start ≤ otherHit start) :
+    clusterTrialSum positions sieveHit ≤
+      clusterTrialSum positions otherHit := by
+  unfold clusterTrialSum
+  apply Finset.sum_le_sum
+  intro start hmem
+  exact h start (Finset.mem_range.mp hmem)
