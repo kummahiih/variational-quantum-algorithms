@@ -5,7 +5,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from cluster_expectation import (
-    expected_first_hit,\n    power_of_two_cluster_expectation,\n    power_of_two_cluster_sum,
+    expected_first_hit,
+    power_of_two_cluster_expectation,
+    power_of_two_cluster_sum,
     first_hit_times,
     random_with_replacement_expectation,
     random_without_replacement_expectation,
