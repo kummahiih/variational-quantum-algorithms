@@ -41,7 +41,7 @@ theorem sieveKey_zero (i : Nat) : sieveKey 0 i = 2 * i + 1 := by
 theorem sieveKey_succ (k i : Nat) :
     sieveKey (k + 1) i = 2 * sieveKey k i := by
   simp [sieveKey, dyadicSample, Nat.pow_succ,
-    Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
+    Nat.mul_comm, Nat.mul_left_comm]
 
 -- Global uniqueness, including across *different* refinement levels.
 theorem sieveKey_unique (k l i j : Nat)
