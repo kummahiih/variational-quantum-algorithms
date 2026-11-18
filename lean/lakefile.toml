@@ -1,6 +1,9 @@
 name = "vqa_proofs"
 version = "0.1.0"
-defaultTargets = ["Main"]
+defaultTargets = ["Main", "DyadicSieve"]
 
 [[lean_lib]]
 name = "Main"
+
+[[lean_lib]]
+name = "DyadicSieve"
