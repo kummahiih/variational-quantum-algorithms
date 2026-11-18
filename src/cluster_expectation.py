@@ -41,6 +41,32 @@ def expected_first_hit(n_bits: int, length: int) -> Fraction:
     return Fraction(sum(times), len(times))
 
 
+def power_of_two_cluster_expectation(n_bits: int, length: int) -> Fraction:
+    """Closed form for a solid cluster of power-of-two length.
+
+    Assumes the cluster start is uniform in [0, 2**n_bits-length].
+    The dyadic sieve tests the midpoint of each successively finer cell.
+    """
+    if n_bits < 0:
+        raise ValueError("n_bits must be nonnegative")
+    size = 1 << n_bits
+    if not 1 <= length <= size or length & (length - 1):
+        raise ValueError("length must be a power of two between 1 and 2**n_bits")
+    return Fraction(size * (size - length + 2), 2 * length * (size - length + 1))
+
+
+def power_of_two_cluster_sum(n_bits: int, length: int) -> int:
+    """Integer sum of first-hit trials over all valid cluster starts."""
+    if n_bits < 0:
+        raise ValueError("n_bits must be nonnegative")
+    size = 1 << n_bits
+    if not 1 <= length <= size or length & (length - 1):
+        raise ValueError("length must be a power of two between 1 and 2**n_bits")
+    numerator = size * (size - length + 2)
+    assert numerator % (2 * length) == 0
+    return numerator // (2 * length)
+
+
 def random_with_replacement_expectation(n_bits: int, length: int) -> Fraction:
     """Independent uniform draws, including possible repeated keys."""
     if n_bits < 0:
