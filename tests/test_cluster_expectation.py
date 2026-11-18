@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from cluster_expectation import (
-    expected_first_hit,
+    expected_first_hit,\n    power_of_two_cluster_expectation,\n    power_of_two_cluster_sum,
     first_hit_times,
     random_with_replacement_expectation,
     random_without_replacement_expectation,
@@ -29,6 +29,23 @@ class ClusterExpectationTests(unittest.TestCase):
                     for start in range((1 << n) - m + 1)
                 ]
                 self.assertEqual(first_hit_times(n, m), expected)
+
+    def test_power_of_two_closed_form(self):
+        for n in range(10):
+            size = 1 << n
+            for r in range(n + 1):
+                length = 1 << r
+                exact = expected_first_hit(n, length)
+                self.assertEqual(power_of_two_cluster_expectation(n, length), exact)
+                self.assertEqual(
+                    power_of_two_cluster_sum(n, length),
+                    sum(first_hit_times(n, length)),
+                )
+                if 1 < length < size:
+                    self.assertLess(
+                        exact,
+                        random_without_replacement_expectation(n, length),
+                    )
 
     def test_random_baselines(self):
         self.assertEqual(random_with_replacement_expectation(4, 2), Fraction(8))
