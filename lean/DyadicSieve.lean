@@ -32,7 +32,7 @@ theorem dyadicSample_injective (step i j : Nat) (hstep : 0 < step)
     (h : dyadicSample step i = dyadicSample step j) : i = j := by
   unfold dyadicSample at h
   have hodd : dyadicOdd i = dyadicOdd j := by
-    exact (Nat.mul_right_cancel (by simpa using h))
+    exact Nat.eq_of_mul_eq_mul_right hstep h
   exact dyadicOdd_injective i j hodd
 
 theorem sieveKey_zero (i : Nat) : sieveKey 0 i = 2 * i + 1 := by
