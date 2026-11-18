@@ -16,7 +16,7 @@ A concise record of work completed in this study repository. Update as experimen
 
 **Python tests.** [`tests/test_dyadic_sieve.py`](../tests/test_dyadic_sieve.py) checks the four-bit ordering, uniqueness/completeness for bit widths 0 through 8, and negative-width rejection. The user reported all three tests passing.
 
-**Lean formalization.** [`lean/DyadicSieve.lean`](../lean/DyadicSieve.lean) defines `sieveKey k i = (2*i+1)*2^k` and proves:
+**Lean formalization.** [`lean/DyadicSieve.lean`](../lean/DyadicSieve.lean) defines $\mathrm{sieveKey}(k,i)=(2i+1)2^k$ and proves:
 - Injectivity of odd multipliers and uniqueness of samples within a level.
 - **Global uniqueness**: equal positive sieve keys imply equal level and index.
 - Positivity of generated sieve keys; zero is handled separately in Python.
@@ -46,9 +46,15 @@ lake -d lean build
 
 ## 2026-11-19 — Expected time to find a solid cluster
 
-Model: `N = 2**n_bits` keys, one contiguous interesting interval of length `m`, and a uniformly random interval start among `N-m+1` possibilities. For each start `a`, `T(a)` is the 1-based index of the first sieve key in `[a, a+m)`.
+Model: $N=2^n$ keys, one contiguous interesting interval of length $m$, and a uniformly random interval start among $N-m+1$ possibilities. For each start $a$, $T(a)$ is the 1-based index of the first sieve key in $[a,a+m)$.
 
-The **exact** expected number of trials is `sum(T(a) for a in range(N-m+1)) / (N-m+1)`. The comparison baselines are `N/m` for independent uniform random draws **with replacement**, and `(N+1)/(m+1)` for a uniformly random permutation (**without replacement**).
+The **exact** expected number of trials is
+
+$
+\mathbb{E}[T]=\frac{1}{N-m+1}\sum_{a=0}^{N-m}T(a).
+$
+
+The comparison baselines are $N/m$ for independent uniform random draws **with replacement**, and $(N+1)/(m+1)$ for a uniformly random permutation (**without replacement**).
 
 Added [`src/cluster_expectation.py`](../src/cluster_expectation.py) to calculate this exact rational number by exhaustive cluster-start enumeration, with [tests](../tests/test_cluster_expectation.py) cross-checking against direct scanning. For `N=16` the expected sieve trial counts are `m=1: 17/2`, `m=2: 64/15`, `m=3: 22/7`, `m=4: 28/13`, and `m=16: 1`.
 
@@ -58,30 +64,42 @@ Next proof task: formalize first-hit times of the bounded dyadic sequence, prove
 
 ## 2026-11-19 — Power-of-two solid-cluster closed form
 
-For `N=2**n_bits`, a contiguous cluster of length `m=2**r`, and a uniformly random start among `N-m+1` possible positions, the exact first-hit sum for the dyadic sieve follows the formula
+For $N=2^n$, a contiguous cluster of length $m=2^r$, and a uniformly random start among $N-m+1$ possible positions, the exact first-hit sum for the dyadic sieve follows the formula
 
-`S(N,m) = N*(N-m+2)/(2*m)`.
+$
+S(N,m)=\frac{N(N-m+2)}{2m}.
+$
 
-Consequently the expected first-hit trial is
+Consequently, the expected first-hit trial is
 
-`E(N,m) = N*(N-m+2)/(2*m*(N-m+1))`.
+$
+\boxed{\mathbb{E}[T]=\frac{N(N-m+2)}{2m(N-m+1)}}.
+$
 
-**Arithmetic-series derivation.** Set `q=N/m`. For the dyadic midpoint order, exhaustive results show the following first-hit histogram over all `N-m+1=m*(q-1)+1` possible cluster starts: exactly `m` starts are first hit on each trial `t=1,...,q-1`, and the one remaining boundary start is first hit on trial `q`. Thus
+**Arithmetic-series derivation.** Set $q=N/m$. For the dyadic midpoint order, exhaustive results show the following first-hit histogram over all $N-m+1=m(q-1)+1$ possible cluster starts: exactly $m$ starts are first hit on each trial $t=1,\ldots,q-1$, and the one remaining boundary start is first hit on trial $q$. Thus
 
-```text
-S = m*(1 + 2 + ... + (q-1)) + q
-  = m*q*(q-1)/2 + q
-  = q*(m*q-m+2)/2
-  = N*(N-m+2)/(2*m).
-
-E = S/(N-m+1)
-  = N*(N-m+2)/(2*m*(N-m+1)).
-```
+$
+\begin{aligned}
+S &= m\sum_{t=1}^{q-1}t+q \\
+  &= \frac{mq(q-1)}{2}+q \\
+  &= \frac{q(mq-m+2)}{2} \\
+  &= \frac{N(N-m+2)}{2m},\\[4pt]
+\mathbb{E}[T] &= \frac{S}{N-m+1}
+              = \frac{N(N-m+2)}{2m(N-m+1)}.
+\end{aligned}
+$
 
 This is an **arithmetic sum** derivation, not a geometric series. The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for power-of-two `N≤512` and every power-of-two `m≤N`. The Python module exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
 
 **Lean status.** [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) now includes `triangular_double_succ`, `powerTwoClusterTrialTotal_succ`, and `powerTwoClusterTrialTotal_formula`. These establish the arithmetic-series identity and closed form *given the first-hit histogram*. The user reported that the updated Lean build appeared successful. **Still unproved in Lean:** that the concrete dyadic sampling order has the required histogram, hence a fully machine-checked end-to-end expected-time theorem.
 
-For `1<m<N`, this expectation is strictly less than the uniform-random-permutation baseline `(N+1)/(m+1)`. The difference simplifies to `(N-m)*(N+2)*(m-1)/(2*m*(m+1)*(N-m+1)) > 0`. At `m=1` and `m=N`, the expectations agree.
+For $1<m<N$, this expectation is strictly less than the uniform-random-permutation baseline $(N+1)/(m+1)$. The difference simplifies to
+
+$
+\frac{N+1}{m+1}-\mathbb{E}[T]
+=\frac{(N-m)(N+2)(m-1)}{2m(m+1)(N-m+1)}>0.
+$
+
+At $m=1$ and $m=N$, the expectations agree.
 
 **Open formalization:** derive the histogram directly from the bounded dyadic sampling sequence in Lean, and prove the rational expectation/comparison theorem end-to-end. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
