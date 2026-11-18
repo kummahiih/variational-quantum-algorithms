@@ -52,9 +52,9 @@ The **exact** expected number of trials is `sum(T(a) for a in range(N-m+1)) / (N
 
 Added [`src/cluster_expectation.py`](../src/cluster_expectation.py) to calculate this exact rational number by exhaustive cluster-start enumeration, with [tests](../tests/test_cluster_expectation.py) cross-checking against direct scanning. For `N=16` the expected sieve trial counts are `m=1: 17/2`, `m=2: 64/15`, `m=3: 22/7`, `m=4: 28/13`, and `m=16: 1`.
 
-Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. **These Lean lemmas do not yet prove a closed-form expectation for the dyadic sieve or an inequality against the random baselines.** The Python examples are exact computations for finite instances, not a general theorem. New files have not yet been built/tested in the user's environment.
+Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. The user confirmed the seven Python tests and a successful Lean build after initial fixes. Later Lean lemmas also prove the arithmetic-series closed form from a proposed first-hit histogram, but the histogram has not yet been proved from the actual sieve sequence.
 
-Next proof task: formalize first-hit times of the bounded dyadic sequence, derive its gap/coverage properties and the resulting expected-trial formula or inequality for all valid `N,m`.
+Next proof task: formalize first-hit times of the bounded dyadic sequence, prove its cluster-start histogram for power-of-two `m`, and then extend the analysis to arbitrary `m`.
 
 ## 2026-11-19 — Power-of-two solid-cluster closed form
 
@@ -66,8 +66,22 @@ Consequently the expected first-hit trial is
 
 `E(N,m) = N*(N-m+2)/(2*m*(N-m+1))`.
 
-The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for `N=1,2,...,512` (powers of two) and every power-of-two `m≤N`. This is **computational validation, not yet a Lean proof of the formula**. The `src/cluster_expectation.py` module now exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
+**Arithmetic-series derivation.** Set `q=N/m`. For the dyadic midpoint order, exhaustive results show the following first-hit histogram over all `N-m+1=m*(q-1)+1` possible cluster starts: exactly `m` starts are first hit on each trial `t=1,...,q-1`, and the one remaining boundary start is first hit on trial `q`. Thus
+
+```text
+S = m*(1 + 2 + ... + (q-1)) + q
+  = m*q*(q-1)/2 + q
+  = q*(m*q-m+2)/2
+  = N*(N-m+2)/(2*m).
+
+E = S/(N-m+1)
+  = N*(N-m+2)/(2*m*(N-m+1)).
+```
+
+This is an **arithmetic sum** derivation, not a geometric series. The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for power-of-two `N≤512` and every power-of-two `m≤N`. The Python module exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
+
+**Lean status.** [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) now includes `triangular_double_succ`, `powerTwoClusterTrialTotal_succ`, and `powerTwoClusterTrialTotal_formula`. These establish the arithmetic-series identity and closed form *given the first-hit histogram*. The user reported that the updated Lean build appeared successful. **Still unproved in Lean:** that the concrete dyadic sampling order has the required histogram, hence a fully machine-checked end-to-end expected-time theorem.
 
 For `1<m<N`, this expectation is strictly less than the uniform-random-permutation baseline `(N+1)/(m+1)`. The difference simplifies to `(N-m)*(N+2)*(m-1)/(2*m*(m+1)*(N-m+1)) > 0`. At `m=1` and `m=N`, the expectations agree.
 
-**Open formalization:** prove the first-hit sum identity from the finite dyadic sampling sequence in Lean, then derive the rational inequality. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
+**Open formalization:** derive the histogram directly from the bounded dyadic sampling sequence in Lean, and prove the rational expectation/comparison theorem end-to-end. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
