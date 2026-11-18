@@ -50,9 +50,9 @@ Model: $N=2^n$ keys, one contiguous interesting interval of length $m$, and a un
 
 The **exact** expected number of trials is
 
-$
+```math
 \mathbb{E}[T]=\frac{1}{N-m+1}\sum_{a=0}^{N-m}T(a).
-$
+```
 
 The comparison baselines are $N/m$ for independent uniform random draws **with replacement**, and $(N+1)/(m+1)$ for a uniformly random permutation (**without replacement**).
 
@@ -66,19 +66,19 @@ Next proof task: formalize first-hit times of the bounded dyadic sequence, prove
 
 For $N=2^n$, a contiguous cluster of length $m=2^r$, and a uniformly random start among $N-m+1$ possible positions, the exact first-hit sum for the dyadic sieve follows the formula
 
-$
+```math
 S(N,m)=\frac{N(N-m+2)}{2m}.
-$
+```
 
 Consequently, the expected first-hit trial is
 
-$
+```math
 \boxed{\mathbb{E}[T]=\frac{N(N-m+2)}{2m(N-m+1)}}.
-$
+```
 
 **Arithmetic-series derivation.** Set $q=N/m$. For the dyadic midpoint order, exhaustive results show the following first-hit histogram over all $N-m+1=m(q-1)+1$ possible cluster starts: exactly $m$ starts are first hit on each trial $t=1,\ldots,q-1$, and the one remaining boundary start is first hit on trial $q$. Thus
 
-$
+```math
 \begin{aligned}
 S &= m\sum_{t=1}^{q-1}t+q \\
   &= \frac{mq(q-1)}{2}+q \\
@@ -87,7 +87,7 @@ S &= m\sum_{t=1}^{q-1}t+q \\
 \mathbb{E}[T] &= \frac{S}{N-m+1}
               = \frac{N(N-m+2)}{2m(N-m+1)}.
 \end{aligned}
-$
+```
 
 This is an **arithmetic sum** derivation, not a geometric series. The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for power-of-two `N≤512` and every power-of-two `m≤N`. The Python module exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
 
@@ -95,10 +95,10 @@ This is an **arithmetic sum** derivation, not a geometric series. The formula ag
 
 For $1<m<N$, this expectation is strictly less than the uniform-random-permutation baseline $(N+1)/(m+1)$. The difference simplifies to
 
-$
+```math
 \frac{N+1}{m+1}-\mathbb{E}[T]
 =\frac{(N-m)(N+2)(m-1)}{2m(m+1)(N-m+1)}>0.
-$
+```
 
 At $m=1$ and $m=N$, the expectations agree.
 
