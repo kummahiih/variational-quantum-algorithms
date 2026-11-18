@@ -31,7 +31,7 @@ theorem clusterTrialSum_le (positions bound : Nat)
       have hlast : firstHit positions ≤ bound :=
         hbound positions (by omega)
       have hsum := ih hprefix
-      simp only [clusterTrialSum]
+      rw [clusterTrialSum, Nat.succ_mul]
       omega
 
 theorem clusterTrialSum_compare (positions : Nat)
