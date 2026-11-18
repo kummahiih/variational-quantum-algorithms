@@ -1,0 +1,5 @@
+# Agent notes
+
+For related SDK documentation, VQA examples, and neighboring repositories, see [docs/neighbors.md](docs/neighbors.md).
+
+Keep `src/` flat and the Lean setup minimal unless the project owner requests changes.
