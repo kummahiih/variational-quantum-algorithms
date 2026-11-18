@@ -1,3 +1,5 @@
+import Lean
+
 /-
   Dyadic sieve: arithmetic properties of the actual sampling pattern.
 
