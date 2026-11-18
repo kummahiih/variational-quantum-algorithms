@@ -55,3 +55,19 @@ Added [`src/cluster_expectation.py`](../src/cluster_expectation.py) to calculate
 Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. **These Lean lemmas do not yet prove a closed-form expectation for the dyadic sieve or an inequality against the random baselines.** The Python examples are exact computations for finite instances, not a general theorem. New files have not yet been built/tested in the user's environment.
 
 Next proof task: formalize first-hit times of the bounded dyadic sequence, derive its gap/coverage properties and the resulting expected-trial formula or inequality for all valid `N,m`.
+
+## 2026-11-19 — Power-of-two solid-cluster closed form
+
+For `N=2**n_bits`, a contiguous cluster of length `m=2**r`, and a uniformly random start among `N-m+1` possible positions, the exact first-hit sum for the dyadic sieve follows the formula
+
+`S(N,m) = N*(N-m+2)/(2*m)`.
+
+Consequently the expected first-hit trial is
+
+`E(N,m) = N*(N-m+2)/(2*m*(N-m+1))`.
+
+The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for `N=1,2,...,512` (powers of two) and every power-of-two `m≤N`. This is **computational validation, not yet a Lean proof of the formula**. The `src/cluster_expectation.py` module now exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
+
+For `1<m<N`, this expectation is strictly less than the uniform-random-permutation baseline `(N+1)/(m+1)`. The difference simplifies to `(N-m)*(N+2)*(m-1)/(2*m*(m+1)*(N-m+1)) > 0`. At `m=1` and `m=N`, the expectations agree.
+
+**Open formalization:** prove the first-hit sum identity from the finite dyadic sampling sequence in Lean, then derive the rational inequality. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
