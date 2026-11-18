@@ -76,10 +76,15 @@ theorem triangular_double_succ (q : Nat) :
       simp [triangular]
   | succ q ih =>
       rw [triangular]
-      rw [Nat.mul_add] at *
-      rw [Nat.succ_eq_add_one] at *
-      simp only [Nat.mul_add, Nat.add_mul]
-      omega
+      have h : 2 * triangular (q + 1) = q * (q + 1) := ih
+      calc
+        2 * (triangular (q + 1) + (q + 1)) =
+            2 * triangular (q + 1) + 2 * (q + 1) := by
+              omega
+        _ = q * (q + 1) + 2 * (q + 1) := by rw [h]
+        _ = (q + 1) * (q + 2) := by
+              simp only [Nat.mul_add, Nat.add_mul]
+              omega
 
 def powerTwoClusterTrialTotal (m q : Nat) : Nat :=
   m * triangular q + q
@@ -100,8 +105,8 @@ theorem powerTwoClusterTrialTotal_formula (m q : Nat) :
   calc
     2 * (m * triangular (q + 1) + (q + 1)) =
         m * (2 * triangular (q + 1)) + 2 * (q + 1) := by
-          simp [Nat.mul_add, Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
+          omega
     _ = m * (q * (q + 1)) + 2 * (q + 1) := by rw [htri]
     _ = (q + 1) * (m * q + 2) := by
-          simp [Nat.mul_add, Nat.add_mul, Nat.mul_assoc,
-            Nat.mul_comm, Nat.mul_left_comm]
+          simp only [Nat.mul_add, Nat.add_mul]
+          omega
