@@ -42,3 +42,16 @@ From the repository root:
 python -m unittest discover -s tests -v
 lake -d lean build
 ```
+
+
+## 2026-11-19 — Expected time to find a solid cluster
+
+Model: `N = 2**n_bits` keys, one contiguous interesting interval of length `m`, and a uniformly random interval start among `N-m+1` possibilities. For each start `a`, `T(a)` is the 1-based index of the first sieve key in `[a, a+m)`.
+
+The **exact** expected number of trials is `sum(T(a) for a in range(N-m+1)) / (N-m+1)`. The comparison baselines are `N/m` for independent uniform random draws **with replacement**, and `(N+1)/(m+1)` for a uniformly random permutation (**without replacement**).
+
+Added [`src/cluster_expectation.py`](../src/cluster_expectation.py) to calculate this exact rational number by exhaustive cluster-start enumeration, with [tests](../tests/test_cluster_expectation.py) cross-checking against direct scanning. For `N=16` the expected sieve trial counts are `m=1: 17/2`, `m=2: 64/15`, `m=3: 22/7`, `m=4: 28/13`, and `m=16: 1`.
+
+Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. **These Lean lemmas do not yet prove a closed-form expectation for the dyadic sieve or an inequality against the random baselines.** The Python examples are exact computations for finite instances, not a general theorem. New files have not yet been built/tested in the user's environment.
+
+Next proof task: formalize first-hit times of the bounded dyadic sequence, derive its gap/coverage properties and the resulting expected-trial formula or inequality for all valid `N,m`.
