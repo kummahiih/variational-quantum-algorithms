@@ -105,8 +105,19 @@ theorem powerTwoClusterTrialTotal_formula (m q : Nat) :
   calc
     2 * (m * triangular (q + 1) + (q + 1)) =
         m * (2 * triangular (q + 1)) + 2 * (q + 1) := by
-          omega
+          calc
+            2 * (m * triangular (q + 1) + (q + 1)) =
+                2 * (m * triangular (q + 1)) + 2 * (q + 1) :=
+                  Nat.mul_add _ _ _
+            _ = m * (2 * triangular (q + 1)) + 2 * (q + 1) := by
+                  ac_rfl
     _ = m * (q * (q + 1)) + 2 * (q + 1) := by rw [htri]
     _ = (q + 1) * (m * q + 2) := by
-          simp only [Nat.mul_add, Nat.add_mul]
-          omega
+          calc
+            m * (q * (q + 1)) + 2 * (q + 1) =
+                (m * q) * (q + 1) + 2 * (q + 1) := by
+                  rw [Nat.mul_assoc]
+            _ = (m * q + 2) * (q + 1) := by
+                  rw [Nat.add_mul]
+            _ = (q + 1) * (m * q + 2) :=
+                  Nat.mul_comm _ _
