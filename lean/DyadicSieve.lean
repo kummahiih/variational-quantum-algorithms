@@ -21,4 +21,4 @@ theorem cluster_hit_of_forward_cover
 -- Each successive refinement halves the spacing.
 theorem dyadic_refinement (k : Nat) :
     2 ^ (k + 1) = 2 * 2 ^ k := by
-  simp [pow_succ, Nat.mul_comm]
+  simp [Nat.pow_succ, Nat.mul_comm]
