@@ -1,9 +1,12 @@
 name = "vqa_proofs"
 version = "0.1.0"
-defaultTargets = ["Main", "DyadicSieve"]
+defaultTargets = ["Main", "DyadicSieve", "ClusterExpectation"]
 
 [[lean_lib]]
 name = "Main"
 
 [[lean_lib]]
 name = "DyadicSieve"
+
+[[lean_lib]]
+name = "ClusterExpectation"
