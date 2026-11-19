@@ -15,6 +15,8 @@ The editable paper is [`source/dyadic_qaoa_note.tex`](source/dyadic_qaoa_note.te
 - `VERIFICATION_LOG.txt`: verification notes from preparation of this draft; **not** a fresh clean-checkout Lean build or repository-wide CI result.
 - `ZENODO_METADATA_DRAFT.md`: proposed upload metadata with placeholders (not a DOI).
 
+**Figure 2 reading note:** Recursive (blue) and original (orange) sieve curves have identical aggregate success rates at the four reported budgets. The graph intentionally draws a two-color outlined trace so both coincident series are visible; no x/y values are shifted.
+
 The generated `figures/*.pdf`, `figures/*.png`, and compiled manuscript PDF are **build artifacts**, not tracked here. Generate them from the tracked CSV and plotting script before compiling the paper. No `code_snapshot/` duplicates are tracked in this repository, because the source modules already live in `src/`, `examples/`, and `tests/`.
 
 ## Reproduce with Python 3.11+

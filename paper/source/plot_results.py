@@ -30,15 +30,44 @@ plt.close(fig)
 
 # Figure 2: hit rate by evaluation budget, using each randomized seed as a trial;
 # conditions are not independent random problem draws, so descriptive only.
-fig, ax=plt.subplots(figsize=(6.9,3.0))
-for method, label in zip(ORDER, LABELS):
-    rs=[r for r in ROWS if r['method']==method]
-    xs=[10,20,40,65]
-    ys=[100*sum(bool(r['first_hit']) and int(r['first_hit'])<=b for r in rs)/len(rs) for b in xs]
-    ax.plot(xs,ys,marker='o',ms=4,label=label)
-ax.set(xlabel='Maximum exact energy evaluations (including initialization)',ylabel='Reached the 80% target (%)',xlim=(9,66),ylim=(0,105))
-ax.set_xticks([10,20,40,65]); ax.grid(alpha=.15)
-ax.legend(frameon=False,fontsize=7,ncol=2,loc='lower right')
+# The original and recursive sieves have IDENTICAL aggregated hit rates at
+# these four checkpoints. Draw a thick blue outer trace with a narrower dashed
+# orange inner trace so neither series is hidden by overplotting.
+fig, ax = plt.subplots(figsize=(7.4, 3.35))
+xs = [10, 20, 40, 65]
+def hit_curve(method):
+    rs = [r for r in ROWS if r['method'] == method]
+    return [100 * sum(bool(r['first_hit']) and int(r['first_hit']) <= b
+                      for r in rs) / len(rs) for b in xs]
+
+handles = {}
+# Draw the alternative comparators first; they can also coincide at later
+# checkpoints, but we give priority to keeping both sieve series visible.
+for method, label, color in zip(ORDER[2:], LABELS[2:],
+                                ['tab:green', 'tab:red', 'tab:purple', 'tab:brown']):
+    (line,) = ax.plot(xs, hit_curve(method), marker='o', markersize=4,
+                      linewidth=1.6, color=color, label=label, zorder=2)
+    handles[method] = line
+
+# Render same-position curves as a two-color outlined line rather than
+# shifting x/y data or pretending the two methods have different outcomes.
+(blue,) = ax.plot(xs, hit_curve('recursive'), color='tab:blue',
+                  marker='o', markersize=8, linewidth=4.3, zorder=5,
+                  label='Recursive sieve')
+(orange,) = ax.plot(xs, hit_curve('original'), color='tab:orange',
+                    linestyle='--', marker='s', markerfacecolor='white',
+                    markeredgewidth=1.1, markersize=4.3, linewidth=1.6,
+                    zorder=6, label='Original sieve')
+handles['recursive'], handles['original'] = blue, orange
+
+ax.set(xlabel='Maximum exact energy evaluations (including initialization)',
+       ylabel='Reached the 80% target (%)', xlim=(9, 66), ylim=(0, 105))
+ax.set_xticks(xs)
+ax.grid(alpha=.15)
+ax.legend([handles[m] for m in ORDER], LABELS, frameon=False,
+          fontsize=7.4, ncol=2, loc='lower right')
+ax.annotate('Blue and orange curves coincide', xy=(10.8, 16.5),
+            fontsize=7.6, color='0.28')
 fig.tight_layout()
 fig.savefig(ROOT / 'figures/target_hits.pdf')
 fig.savefig(ROOT / 'figures/target_hits.png', dpi=180)
