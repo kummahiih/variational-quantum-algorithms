@@ -252,7 +252,7 @@ theorem positiveSieve_prefix_is_multiples (n r : Nat) :
 -- The order has no repeated keys even when truncated to its prefix.
 theorem positiveSieve_prefix_nodup (n r : Nat) :
     ((positiveSieve (n + r)).take (2 ^ n - 1)).Nodup := by
-  exact (positiveSieve_nodup (n + r)).take _
+  exact (positiveSieve_nodup (n + r)).take
 
 -- Every nonboundary solid cluster has exactly one successful key
 -- among the first q-1 samples, namely the next positive multiple of m.
