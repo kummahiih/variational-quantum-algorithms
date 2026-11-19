@@ -113,7 +113,7 @@ theorem positiveSieve_scaled_prefix (n r : Nat) :
         (List.range (2 ^ (n + r))).map (fun i => 2 * i + 1), ?_⟩
       rw [Nat.add_succ, positiveSieve, htail]
       simp [List.map_append, List.map_map, List.append_assoc,
-        Nat.pow_succ, Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
+        Nat.pow_succ, Nat.mul_comm, Nat.mul_left_comm]
 
 theorem positiveSieve_prefix (n r : Nat) :
     (positiveSieve (n + r)).take (2 ^ n - 1) =
@@ -158,7 +158,7 @@ theorem positiveSieve_scaled_next (n r : Nat) :
       have hindex : n + (r + 1) + 1 = (n + r + 1) + 1 := by omega
       rw [hindex, positiveSieve, htail]
       simp [List.map_append, List.map_map, List.append_assoc,
-        Nat.pow_succ, Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
+        Nat.pow_succ, Nat.mul_comm, Nat.mul_left_comm]
 
 -- This also identifies the boundary trial without a probabilistic
 -- or first-hit assumption.
@@ -220,22 +220,23 @@ theorem aligned_cluster_unique (j k m a : Nat)
     (hhitLo : a ≤ (k + 1) * m)
     (hhitHi : (k + 1) * m < a + m) :
     j = k := by
-  by_contra hne
-  have hcases : k < j ∨ j < k := by omega
-  rcases hcases with hk | hk
-  · have hle : k + 1 ≤ j := by omega
-    have hmle := Nat.mul_le_mul_right m hle
-    omega
-  · have hle : j + 2 ≤ k + 1 := by omega
-    have hmle := Nat.mul_le_mul_right m hle
-    have hstep : (j + 2) * m = (j + 1) * m + m := by
-      calc
-        (j + 2) * m = ((j + 1) + 1) * m := by
-          congr 1
-          omega
-        _ = (j + 1) * m + m := by
-          simp [Nat.add_mul]
-    omega
+  by_cases heq : j = k
+  · exact heq
+  · have hcases : k < j ∨ j < k := by omega
+    rcases hcases with hk | hk
+    · have hle : k + 1 ≤ j := by omega
+      have hmle := Nat.mul_le_mul_right m hle
+      omega
+    · have hle : j + 2 ≤ k + 1 := by omega
+      have hmle := Nat.mul_le_mul_right m hle
+      have hstep : (j + 2) * m = (j + 1) * m + m := by
+        calc
+          (j + 2) * m = ((j + 1) + 1) * m := by
+            congr 1
+            omega
+          _ = (j + 1) * m + m := by
+            simp [Nat.add_mul]
+      omega
 
 
 -- The first 2^n-1 samples consist of the q-1 nonzero multiples of
@@ -254,6 +255,15 @@ theorem positiveSieve_prefix_nodup (n r : Nat) :
     ((positiveSieve (n + r)).take (2 ^ n - 1)).Nodup := by
   exact (positiveSieve_nodup (n + r)).take
 
+-- Explicit uniqueness predicate: finite list of sampled keys contains
+-- exactly one hit in the specified half-open interval.
+def uniqueClusterHit (samples : List Nat) (start width : Nat) : Prop :=
+  ∃ key : Nat,
+    (key ∈ samples ∧ start ≤ key ∧ key < start + width) ∧
+    ∀ other : Nat,
+      (other ∈ samples ∧ start ≤ other ∧ other < start + width) →
+      other = key
+
 -- Every nonboundary solid cluster has exactly one successful key
 -- among the first q-1 samples, namely the next positive multiple of m.
 -- This statement refers to the *actual* finite sieve list.
@@ -261,9 +271,8 @@ theorem positiveSieve_cluster_unique_hit (n r j a : Nat)
     (hj : j + 1 < 2 ^ n)
     (hlo : j * 2 ^ r < a)
     (hhi : a ≤ (j + 1) * 2 ^ r) :
-    ∃! key : Nat,
-      key ∈ (positiveSieve (n + r)).take (2 ^ n - 1) ∧
-      a ≤ key ∧ key < a + 2 ^ r := by
+    uniqueClusterHit
+      ((positiveSieve (n + r)).take (2 ^ n - 1)) a (2 ^ r) := by
   let m := 2 ^ r
   have hpos : 0 < j + 1 := by omega
   have hmem : m * (j + 1) ∈
@@ -271,7 +280,8 @@ theorem positiveSieve_cluster_unique_hit (n r j a : Nat)
     positiveSieve_prefix_is_multiples n r (j + 1) hpos hj
   have hh := aligned_cluster_contains j m a hlo hhi
   have hgoal : m * (j + 1) = (j + 1) * m := Nat.mul_comm _ _
-  refine ⟨m * (j + 1), ⟨hmem, ?_, ?_⟩, ?_⟩
+  unfold uniqueClusterHit
+  refine ⟨m * (j + 1), ⟨⟨hmem, ?_, ?_⟩, ?_⟩⟩
   · simpa [hgoal] using hh.1
   · simpa [hgoal] using hh.2
   · intro key hkey
@@ -298,10 +308,9 @@ theorem positiveSieve_cluster_unique_hit (n r j a : Nat)
 theorem positiveSieve_cluster_block (n r j : Nat)
     (hj : j + 1 < 2 ^ n) :
     ∀ i < 2 ^ r,
-      ∃! key : Nat,
-        key ∈ (positiveSieve (n + r)).take (2 ^ n - 1) ∧
-        j * 2 ^ r + i + 1 ≤ key ∧
-        key < j * 2 ^ r + i + 1 + 2 ^ r := by
+      uniqueClusterHit
+        ((positiveSieve (n + r)).take (2 ^ n - 1))
+        (j * 2 ^ r + i + 1) (2 ^ r) := by
   intro i hi
   have hstep : (j + 1) * 2 ^ r = j * 2 ^ r + 2 ^ r := by
     simp [Nat.add_mul]
@@ -327,10 +336,9 @@ theorem positiveSieve_histogram_certificate (n r : Nat) :
     ∧
     (∀ j, j + 1 < 2 ^ n →
       ∀ i < 2 ^ (r + 1),
-        ∃! key : Nat,
-          key ∈ (positiveSieve (n + r + 1)).take (2 ^ n - 1) ∧
-          j * 2 ^ (r + 1) + i + 1 ≤ key ∧
-          key < j * 2 ^ (r + 1) + i + 1 + 2 ^ (r + 1))
+        uniqueClusterHit
+          ((positiveSieve (n + r + 1)).take (2 ^ n - 1))
+          (j * 2 ^ (r + 1) + i + 1) (2 ^ (r + 1)))
     ∧
     ((positiveSieve (n + r + 1)).take (2 ^ n - 1)).Nodup := by
   refine ⟨positiveSieve_first_q n r, ?_, ?_⟩
