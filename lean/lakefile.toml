@@ -1,6 +1,6 @@
 name = "vqa_proofs"
 version = "0.1.0"
-defaultTargets = ["Main", "DyadicSieve", "ClusterExpectation", "SieveHistogram"]
+defaultTargets = ["Main", "DyadicSieve", "ClusterExpectation", "SieveHistogram", "FirstHitExpectation"]
 
 [[lean_lib]]
 name = "Main"
@@ -13,3 +13,6 @@ name = "ClusterExpectation"
 
 [[lean_lib]]
 name = "SieveHistogram"
+
+[[lean_lib]]
+name = "FirstHitExpectation"
