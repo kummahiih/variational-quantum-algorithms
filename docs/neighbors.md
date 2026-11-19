@@ -43,4 +43,21 @@ The repository's [dyadic sieve](../src/dyadic_sieve.py) is **closely related to 
 **Relevance to this repository.** The finite [solid-cluster expected-hit proof](../docs/journal.md) applies to a *one-dimensional contiguous successful interval* with a uniformly located start, for power-of-two lengths `m >= 2`. It does **not** establish superior VQA training performance: VQA objectives are often multidimensional, periodic, noisy, and non-contiguous. A reasonable future comparison is dyadic-sieve restarts or one-angle scans versus Sobol, Halton, random initialization, and (where suitable) Rotosolve, at matched numbers of circuit evaluations. The sources above establish related approaches, not prior use of this exact sieve and theorem in VQAs.
 
 
+## Variational search, binary search, and recursive reduction
+
+- [Soltaninia & Zhan, *Quantum global minimum finder based on variational quantum search* (2025), Scientific Reports 15:13880](https://www.nature.com/articles/s41598-025-91407-z) — **QGMF** combines variational quantum search (VQS) with binary search over a shift of the **objective-value threshold**. This is closely related to the proposed VQA-plus-binary-search hybrid, but it does **not** binary-search the numerical ordering of bitstring inputs. Each threshold decision depends on a variational quantum search subroutine; logarithmically many threshold adjustments do not by themselves imply logarithmic total circuit cost. [Preprint](https://arxiv.org/abs/2405.00450).
+- [*Reinforcement learning assisted recursive QAOA* (2024), EPJ Quantum Technology](https://link.springer.com/article/10.1140/epjqt/s40507-023-00214-w) — discusses **RQAOA**, which iteratively reduces a binary optimization problem by eliminating variables using correlations obtained from quantum states. This is an example of learned reduction, **not** ordinary midpoint binary search in bitstring order.
+- [Microsoft Azure Quantum: Theory of Grover's search algorithm](https://learn.microsoft.com/en-us/azure/quantum/concepts-grovers) — reference for the ideal coherent-oracle query scaling `O(sqrt(N/M))` with `M` marked bitstrings among `N`. Oracle synthesis, gate cost, and error correction are additional resource questions; Grover's guarantee should not be attributed to a generic VQA.
+
+**Comparison to both dyadic sieves.** With `N=2^n` and `m=2^r >= 2`, and a **uniformly placed contiguous solid cluster** of exactly `m` successful integer-ordered bitstrings, the original sieve's mathematically derived expected number of **classical objective evaluations until the first hit** is
+
+```math
+E_{\mathrm{sieve}}=\frac{N(N-m+2)}{2m(N-m+1)}
+\approx\frac{N}{2m}\quad(N\gg m).
+```
+
+The recursive bit-reversal variant has the same expectation for this special cluster model (numerically checked in Python; not separately formalized in Lean). A classical binary search needs `O(log N)` **directional decisions only if a valid decision oracle can determine which half is still promising**. A plain yes/no hit test at a midpoint gives no such information, even if the successful points form one interval. A VQA subroutine may provide useful guidance but each decision can require many optimizations and circuit shots. Therefore **compare total costs at matched success probability**, rather than comparing sieve point evaluations with a count of binary-search decisions.
+
+A possible hybrid to test: sample promising bitstring regions with VQA/QAOA, then run either sieve within a chosen region; alternatively initialize or restart a VQA from sieve-selected candidates. These are **research proposals**, not established speedups or implemented features in this repository. See the [research journal](journal.md).
+
 Links may target different IQM SDK releases; check version compatibility before using examples.
