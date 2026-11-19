@@ -36,3 +36,32 @@ print(list(recursive_keys(4)))
 Run from `src/` or add it to your Python import path. See
 [`docs/journal.md`](docs/journal.md) for the power-of-two solid-cluster
 finding-time proof. The new variant has not been formalized separately in Lean.
+
+## Draft VQA with recursive-sieve parameter tuning
+
+[`src/sieve_qaoa.py`](src/sieve_qaoa.py) implements a small, **one-layer QAOA**
+for a binary-vector cost function. It prepares a uniform superposition,
+applies the diagonal cost unitary `exp(-i gamma H_C)`, then the mixing
+unitary `exp(-i beta sum X)`, and minimizes the resulting expected cost.
+The **recursive dyadic sieve searches the circuit angles** `gamma` and
+`beta` on a finite grid by alternating one-angle scans; it does **not**
+directly search the binary solution vectors.
+
+Run the four-vertex MaxCut example:
+
+```bash
+python examples/sieve_qaoa_maxcut.py
+python -m unittest discover -s tests -v
+```
+
+The example's ideal statevector run reduces the expected negative cut size
+from `-1` to `-3` with `65` exact energy evaluations. It reports the
+most likely measured bitstrings and their probabilities.
+
+The optimizer accepts `angle_bits`, `sweeps`, `target_energy`, and
+`max_evaluations`. **Order matters under early stopping or a finite
+evaluation budget**; complete scans visit the same angle grid irrespective
+of permutation. This is a small **classical exact-statevector simulation**,
+not a quantum-hardware implementation or evidence of quantum speedup.
+The diagonal cost list has `2**n` entries, so the simulator is not
+scalable to large `n`. See [`docs/journal.md`](docs/journal.md).
