@@ -193,8 +193,10 @@ theorem positiveSieve_boundary_new_hit (n r : Nat) :
     rw [Nat.pow_succ]
     omega
   · intro x hx
-    have hb := positiveSieve_prefix_ge n (r + 1) x
-    simpa [Nat.add_assoc] using hb hx
+    have hx' :
+        x ∈ (positiveSieve (n + (r + 1))).take (2 ^ n - 1) := by
+      simpa [Nat.add_assoc] using hx
+    exact positiveSieve_prefix_ge n (r + 1) x hx'
 
 -- Each positive multiple of m contributes precisely the m cluster
 -- starts immediately preceding that multiple. This is the arithmetic
@@ -231,6 +233,66 @@ theorem aligned_cluster_unique (j k m a : Nat)
         _ = (j + 1) * m + m := by
           simp [Nat.add_mul]
     omega
+
+
+-- Every nonboundary solid cluster has exactly one successful key
+-- among the first q-1 samples, namely the next positive multiple of m.
+-- This statement refers to the *actual* finite sieve list.
+theorem positiveSieve_cluster_unique_hit (n r j a : Nat)
+    (hj : j + 1 < 2 ^ n)
+    (hlo : j * 2 ^ r < a)
+    (hhi : a ≤ (j + 1) * 2 ^ r) :
+    ∃! key : Nat,
+      key ∈ (positiveSieve (n + r)).take (2 ^ n - 1) ∧
+      a ≤ key ∧ key < a + 2 ^ r := by
+  let m := 2 ^ r
+  have hpos : 0 < j + 1 := by omega
+  have hmem : m * (j + 1) ∈
+      (positiveSieve (n + r)).take (2 ^ n - 1) :=
+    positiveSieve_prefix_is_multiples n r (j + 1) hpos hj
+  have hh := aligned_cluster_contains j m a hlo hhi
+  have hgoal : m * (j + 1) = (j + 1) * m := Nat.mul_comm _ _
+  refine ⟨m * (j + 1), ⟨hmem, ?_, ?_⟩, ?_⟩
+  · simpa [hgoal] using hh.1
+  · simpa [hgoal] using hh.2
+  · intro key hkey
+    obtain ⟨hkeymem, hstart, hend⟩ := hkey
+    rw [positiveSieve_prefix] at hkeymem
+    obtain ⟨k, hk, heq⟩ := List.mem_map.mp hkeymem
+    have hkpos := (positiveSieve_bounds n k hk).1
+    have hkstep : k - 1 + 1 = k := by omega
+    have hkeyform : (k - 1 + 1) * m = key := by
+      rw [hkstep, Nat.mul_comm]
+      exact heq
+    have hblock : j = k - 1 := by
+      apply aligned_cluster_unique j (k - 1) m a hlo hhi
+      · rw [hkeyform]
+        exact hstart
+      · rw [hkeyform]
+        exact hend
+    have hsame : k = j + 1 := by omega
+    rw [hsame] at heq
+    simpa [m] using heq.symm
+
+-- A block contains exactly m consecutive starts and every one of
+-- them has the corresponding unique positive-multiple hit.
+theorem positiveSieve_cluster_block (n r j : Nat)
+    (hj : j + 1 < 2 ^ n) :
+    ∀ i < 2 ^ r,
+      ∃! key : Nat,
+        key ∈ (positiveSieve (n + r)).take (2 ^ n - 1) ∧
+        j * 2 ^ r + i + 1 ≤ key ∧
+        key < j * 2 ^ r + i + 1 + 2 ^ r := by
+  intro i hi
+  have hstep : (j + 1) * 2 ^ r = j * 2 ^ r + 2 ^ r := by
+    simp [Nat.add_mul]
+  apply positiveSieve_cluster_unique_hit n r j (j * 2 ^ r + i + 1) hj
+  · omega
+  · omega
+
+theorem positiveSieve_block_start_count (j m : Nat) :
+    ((List.range m).map (fun i => j * m + i + 1)).length = m := by
+  simp
 
 -- The first 2^n-1 samples consist of the q-1 nonzero multiples of
 -- m=2^r, with no repeats. They are also all strictly below N.
