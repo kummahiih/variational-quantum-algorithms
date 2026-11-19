@@ -119,7 +119,7 @@ theorem firstHitTrial_append_no_hit (start width : Nat) :
   induction before with
   | nil =>
       intro after _
-      simp [firstHitTrial]
+      simp
   | cons head tail ih =>
       intro after hno
       have hhead : ¬ (start ≤ head ∧ head < start + width) :=
@@ -129,7 +129,7 @@ theorem firstHitTrial_append_no_hit (start width : Nat) :
         intro x hx
         exact hno x (by simp [hx])
       have hr := ih after htail
-      simp [firstHitTrial, hhead, hr, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+      simp [firstHitTrial, hhead, hr, Nat.add_assoc, Nat.add_comm]
 
 -- The zero-start cluster [0,m) is not hit by any of the q-1
 -- nonzero multiples of m. Trial q samples m/2 and hits it.
