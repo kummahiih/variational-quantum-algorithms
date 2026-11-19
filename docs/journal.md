@@ -6,7 +6,7 @@ A concise record of work completed in this study repository. Update as experimen
 
 - Created a deliberately minimal repository layout: flat `src/`, `examples/`, `notebooks/`, `tests/`, `docs/`, and a small Lean project under `lean/`.
 - Added a Python project configuration and MIT license (copyright 2026 Pauli Rikula).
-- Collected neighboring libraries and example implementations in [neighbors.md](neighbors.md), including IQM SDK/QAOA/VQE references and [pytorchqbit](https://github.com/kummahiih/pytorchqbit). The root `agents.txt` points to these references.
+- Collected neighboring libraries and example implementations in [neighbors.md](neighbors.md), including IQM SDK/QAOA/VQE references and [pytorchqbit](https://github.com/kummahiih/pytorchqbit). The root [`AGENTS.md`](../AGENTS.md) points to these references and records repository conventions.
 
 ## Dyadic sieve search
 
@@ -23,16 +23,17 @@ A concise record of work completed in this study repository. Update as experimen
 - A conditional cluster-hit lemma: a bounded forward-gap assumption implies every sufficiently wide interval contains a sample.
 - A simple repeated-draw counterexample for sampling with replacement, plus the dyadic refinement identity.
 
-The user reported `lake -d lean build` completing successfully with seven jobs. A subsequent commit removed an unused `simp` argument reported as a warning; that warning cleanup has not been separately verified.
+At this stage the user confirmed a successful seven-job Lean build. Subsequent modules and their final verification are recorded below.
 
-**Important limits.** The Lean uniqueness theorem concerns the mathematical sampling formula; a full formal correspondence to the bounded Python generator (including completeness and exactly-once zero) has not yet been proved. The cluster lemma assumes bounded gaps rather than deriving the bound from the sieve. There is no formal probabilistic expected-trial comparison or universal optimality theorem. Random sampling *without* replacement also avoids duplicates.
+**Scope of these initial proofs.** The uniqueness theorem covers the mathematical sampling formula; the bounded Python generator and exactly-once zero still lack a direct end-to-end correspondence proof. The gap lemma is conditional. Later sections establish the exact solid-cluster first-hit sum for power-of-two lengths using a formalized finite sieve order. Random sampling *without* replacement also avoids duplicates.
 
-## Next questions
+## Possible future directions
 
-- Prove the actual finite-prefix gap bound for the dyadic ordering and a worst-case discovery bound for contiguous clusters.
-- Prove that the bounded `n`-bit generator enumerates all `2^n` keys exactly once.
-- Specify a probability model for cluster location/width and compare expected first-hit times with random sampling with and without replacement.
-- Explore interoperability with `pytorchqbit` and IQM VQA examples when concrete experiments are selected.
+The power-of-two solid-cluster expectation proof is complete for `m≥2` (see the final entry below). Further proofs are **optional**, not prerequisites for exploring VQA applications:
+
+- Try the sieve as a candidate-bitstring exploration strategy in a concrete VQA experiment with `pytorchqbit` or an IQM example.
+- Study non-power-of-two cluster sizes, random cluster-location distributions, and practical evaluation cost.
+- If useful later, formalize the `m=1` case, a direct Python–Lean correspondence, and worst-case discovery bounds.
 
 ## Verification commands
 
@@ -58,9 +59,9 @@ The comparison baselines are $N/m$ for independent uniform random draws **with r
 
 Added [`src/cluster_expectation.py`](../src/cluster_expectation.py) to calculate this exact rational number by exhaustive cluster-start enumeration, with [tests](../tests/test_cluster_expectation.py) cross-checking against direct scanning. For `N=16` the expected sieve trial counts are `m=1: 17/2`, `m=2: 64/15`, `m=3: 22/7`, `m=4: 28/13`, and `m=16: 1`.
 
-Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. The user confirmed the seven Python tests and a successful Lean build after initial fixes. Later Lean lemmas also prove the arithmetic-series closed form from a proposed first-hit histogram, but the histogram has not yet been proved from the actual sieve sequence.
+Added [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) with finite-sum upper-bound and pointwise comparison lemmas, and included it in the Lake build. The user confirmed the seven Python tests and a successful Lean build after initial fixes. Later Lean modules prove that the actual finite sieve ordering yields the same summed first-hit times; see the final entry.
 
-Next proof task: formalize first-hit times of the bounded dyadic sequence, prove its cluster-start histogram for power-of-two `m`, and then extend the analysis to arbitrary `m`.
+At this point in the journal the concrete first-hit sum was not yet formalized; it is now verified in `FirstHitSum.lean` (last entry).
 
 ## 2026-11-19 — Power-of-two solid-cluster closed form
 
@@ -91,7 +92,7 @@ S &= m\sum_{t=1}^{q-1}t+q \\
 
 This is an **arithmetic sum** derivation, not a geometric series. The formula agrees with direct exhaustive enumeration and is checked in `tests/test_cluster_expectation.py` for power-of-two `N≤512` and every power-of-two `m≤N`. The Python module exposes `power_of_two_cluster_expectation` and `power_of_two_cluster_sum`.
 
-**Lean status.** [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) now includes `triangular_double_succ`, `powerTwoClusterTrialTotal_succ`, and `powerTwoClusterTrialTotal_formula`. These establish the arithmetic-series identity and closed form *given the first-hit histogram*. The user reported that the updated Lean build appeared successful. **Still unproved in Lean:** that the concrete dyadic sampling order has the required histogram, hence a fully machine-checked end-to-end expected-time theorem.
+**Lean status.** [`lean/ClusterExpectation.lean`](../lean/ClusterExpectation.lean) now includes `triangular_double_succ`, `powerTwoClusterTrialTotal_succ`, and `powerTwoClusterTrialTotal_formula`. These establish the arithmetic-series identity and closed form *given the first-hit histogram*. The user reported that the updated Lean build appeared successful. **Historical note:** the connection to the concrete order was unfinished at this stage, but the final entry documents its later machine-checked completion for `m≥2`.
 
 For $1<m<N$, this expectation is strictly less than the uniform-random-permutation baseline $(N+1)/(m+1)$. The difference simplifies to
 
@@ -102,7 +103,7 @@ For $1<m<N$, this expectation is strictly less than the uniform-random-permutati
 
 At $m=1$ and $m=N$, the expectations agree.
 
-**Open formalization:** derive the histogram directly from the bounded dyadic sampling sequence in Lean, and prove the rational expectation/comparison theorem end-to-end. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
+**Current status:** the actual first-hit **sum identity** is now proved end-to-end for power-of-two `m≥2`; the uniform expectation follows by dividing by the number of cluster starts. An explicit rational-valued expectation theorem and arbitrary non-power-of-two lengths are outside the present Lean development.
 
 
 ## 2026-11-19 — Deriving the histogram from the actual sieve order
@@ -119,6 +120,37 @@ This is the same coarse-to-fine order as Python's `keys(n)` before the final zer
 
 For each multiple `j*m` with `1<=j<q`, exactly `m` cluster starts are associated with it: `(j-1)*m+1, ..., j*m`. A solid length-`m` cluster from any of these starts contains `j*m` and no other nonzero multiple of `m`. The only other start is zero; its first hit occurs at trial `q`. Hence the first-hit histogram has `m` occurrences of every trial `1,...,q-1` and one occurrence of trial `q`, establishing the arithmetic-series formula recorded above.
 
-Added [`lean/SieveHistogram.lean`](../lean/SieveHistogram.lean) to formalize the recursive finite order, key bounds, completeness and nonduplication, the scaled prefix, the next sample, and the uniqueness of the positive-prefix hit for each cluster-start block. The theorem `positiveSieve_histogram_certificate` combines those facts for power-of-two `m>1` as a statement about the actual sampled keys. This is the **direct connection to the concrete ordering** that was previously missing. The remaining formal packaging is to define a numeric first-hit-time function in Lean, prove the complete histogram and expected-time sum explicitly from the certificate, and cover the `m=1` final-zero case. The new Lean module has **not yet been compiled in the user's Lean environment**; the proofs remain drafts until that verification completes.
+Added [`lean/SieveHistogram.lean`](../lean/SieveHistogram.lean) to formalize the recursive finite order, key bounds, completeness and nonduplication, the scaled prefix, the next sample, and the uniqueness of the positive-prefix hit for each cluster-start block. The theorem `positiveSieve_histogram_certificate` combines those facts for power-of-two `m>1` as a statement about the actual sampled keys. This is the **direct connection to the concrete ordering** that was previously missing. The remaining step at the time was to define numerical first-hit times and prove their total. Both the structural module and the subsequent first-hit sum module were ultimately **confirmed to compile** (19-job Lean build). The `m=1` case remains outside the final summed theorem.
 
 As an independent implementation cross-check, the same recursive positive-key construction matched Python's level-based generator for bit widths 0 through 9.
+
+## 2026-11-19 — End-to-end expected first-hit sum proved in Lean
+
+**Verified result.** Added [`lean/FirstHitExpectation.lean`](../lean/FirstHitExpectation.lean) and [`lean/FirstHitSum.lean`](../lean/FirstHitSum.lean). The user ran `lake -d lean build` and reported **“Build completed successfully (19 jobs)”**, including `FirstHitSum`, without errors or warnings.
+
+The proof no longer assumes a first-hit histogram. It defines `firstHitTrial` on the concrete finite dyadic sieve, proves the hit ranks for all positive cluster starts, handles the zero-start boundary cluster, partitions all valid starts into blocks, and shows that the resulting sum equals the previously proved weighted rank total.
+
+For `N=2^k` and `m=2^r` with **`2≤m≤N`**, a cluster occupies `[a,a+m)`, with `a` ranging over all `N-m+1` valid starts. The Lean theorem `actualFirstHit_total_formula` proves the integer identity
+
+```math
+2\sum_{a=0}^{N-m} T(a)
+=\frac{N(N-m+2)}{m}.
+```
+
+Equivalently, the exact total is
+
+```math
+S(N,m)=\sum_{a=0}^{N-m}T(a)=\frac{N(N-m+2)}{2m}.
+```
+
+Assuming a **uniform distribution over the possible starting positions**, dividing by their count yields the expected trial number:
+
+```math
+\boxed{\mathbb{E}[T]=\frac{N(N-m+2)}{2m(N-m+1)}}.
+```
+
+Lean checks the **integer sum theorem** from the actual sieve ordering. The rational division displayed above is its mathematical corollary; a separate rational-valued Lean theorem was not added.
+
+Key machine-checked statements: `positiveSieve_histogram_certificate` (finite sieve structure), `firstHitTrial_block` and `firstHitTrial_boundary` (first-hit ranks), `actualFirstHit_total` (sum over all cluster positions equals weighted rank total), and `actualFirstHit_total_formula` (closed form).
+
+**Scope and stopping point.** This completes the intended mathematical argument for solid power-of-two clusters of length at least two. The singleton case `m=1` has expectation `(N+1)/2` for any permutation of `N` keys, but is not covered by this final Lean theorem because the Python algorithm yields zero last. Non-power-of-two lengths can still be evaluated exactly with `src/cluster_expectation.py`. No further formal proofs are planned for now; focus can shift to VQA experiments.
