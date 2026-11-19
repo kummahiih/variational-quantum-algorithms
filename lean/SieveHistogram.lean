@@ -124,7 +124,7 @@ theorem positiveSieve_prefix (n r : Nat) :
     simp only [List.length_map]
     omega
   rw [← hlen]
-  simp
+  exact List.take_append_length
 
 -- Each positive multiple of m contributes precisely the m cluster
 -- starts immediately preceding that multiple. This is the arithmetic
