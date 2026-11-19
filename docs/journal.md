@@ -175,3 +175,43 @@ The within-level permutation is computed iteratively by reversing the `level` in
 This matters for **non-solid successful sets**: on 4 bits, successful keys `{6, 14}` are hit on trial 5 by the original sieve and trial 6 by the recursive variant, whereas `{10, 14}` reverses the advantage (trials 6 versus 5). For uniformly located **solid clusters of power-of-two length**, the exact average remains the same because the order only permutes the first `N/m-1` positive multiples of `m`; this preservation has been **checked in Python**, not separately proved for the variant in Lean.
 
 Added [`tests/test_recursive_dyadic_sieve.py`](../tests/test_recursive_dyadic_sieve.py) to check the four-bit sequence, complete coverage and uniqueness, equivalence of refinement-level sets, examples of non-solid first hits, and the expected-time formula for power-of-two solid clusters. The six new tests passed in a local Python test run. The existing Lean formalization concerns the original ordering; no additional proofs are planned for this variant at present.
+
+## 2026-11-19 — Comparing dyadic sieves against VQA-assisted binary search
+
+**Question.** When the objective is a function of an `n`-bit vector,
+
+```math
+f:\{0,1\}^n\to\mathbb{R},
+\qquad
+\text{hit}(x)\iff f(x)\leq\tau,
+\qquad N=2^n,
+```
+
+how many objective evaluations does either sieve need before finding a hit, compared with a VQA that uses binary search to refine its search?
+
+**Baseline from this project.** For a single uniformly placed *solid contiguous interval* of `m=2^r >= 2` hits in **integer bitstring order**, both sieve variants have expected first-hit count
+
+```math
+\mathbb{E}[T_{\mathrm{sieve}}]
+=\frac{N(N-m+2)}{2m(N-m+1)}
+\approx\frac{N}{2m}\quad(N\gg m).
+```
+
+This counts **individual, deterministic objective evaluations**, stopping at the first hit. The formula is machine-checked for the original sieve's total over cluster positions (uniform averaging is a mathematical corollary); the recursive variant was checked numerically in Python. It is **not** a generic bound for irregular hit sets or arbitrary VQA cost functions.
+
+**Binary search needs a richer oracle.** A midpoint evaluation returning only `hit(x) = false` cannot say whether a target interval is left or right of `x`. Even an unknown single contiguous cluster is **not enough** to justify `O(log N)` midpoint search with mere membership queries. If an algorithm can reliably answer **which half contains a solution**, the candidate bitstring region may instead be reduced in `O(log N)` such *decisions*; each directional decision's cost must be accounted for. For example, a known monotonic or unimodal objective can sometimes provide directional information, but a generic black-box binary-vector objective cannot.
+
+**Related published VQA hybrid.** [Soltaninia and Zhan (2025), *Quantum global minimum finder based on variational quantum search*](https://www.nature.com/articles/s41598-025-91407-z), proposes **QGMF**, using binary search to choose a **shift of the objective-value threshold**, followed by variational quantum search for marked values. It does **not** simply bisect the integer ordering of candidate bitstrings. Logarithmic threshold-selection steps do not imply logarithmic end-to-end VQA cost because each step calls a variational search routine with optimization and measurement overhead. [Recursive QAOA](https://link.springer.com/article/10.1140/epjqt/s40507-023-00214-w) offers a different route: reduce a combinatorial problem through correlations from quantum measurements, rather than searching numeric input halves.
+
+**Illustrative counts (not a benchmark).** Choose `n=16`, `N=65,536`, and a contiguous hit region of length `m=256`.
+
+| Method | Idealized search work | Interpretation |
+| --- | --- | --- |
+| Either dyadic sieve | About **128** evaluations on average | Uniformly positioned solid interval; one classical check per key |
+| Binary search with correct half-membership/direction information | At most **16** decisions to isolate a key | **Not** available from ordinary hit/miss evaluations; decisions may be expensive |
+| VQA + threshold binary search | Number of threshold decisions **times** variational-search cost | No universal speedup or simple fixed evaluation count |
+| Grover search | `O(sqrt(N/m)) = O(16)` coherent oracle queries | Ideal marked-state quantum oracle; not a performance guarantee for VQAs |
+
+Grover's comparison concerns **coherent quantum oracle calls**, not circuit runs of the same cost as classical evaluations. The real resource measure should record objective-function queries, optimizer iterations, quantum circuit executions and shots, oracle/embedding overhead, wall-clock time, and achieved hit probability separately. For example, **16** outer decisions requiring **100** optimization iterations with **100** shots each would consume **160,000** circuit shots, *hypothetically*, before other overhead.
+
+**Research direction; no new proof required.** Test VQA/QAOA as a **region-proposal mechanism** followed by either the original or recursive dyadic sieve inside promising regions. Also compare sieve-selected restarts against purely random, Sobol, or Halton initializations. An instructive first experiment would compare a known contiguous hit region with fragmented/non-solid regions, holding total classical evaluations or circuit-shot budgets and desired success probability fixed. **No VQA hybrid or benchmark is implemented yet**, and the new comparison is a proposal rather than a demonstrated speedup. External pointers are collected in [neighbors.md](neighbors.md).
