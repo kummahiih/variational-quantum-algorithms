@@ -50,6 +50,17 @@ class SieveQAOATests(unittest.TestCase):
         result = optimize_with_recursive_sieve(self.costs, target_energy=1)
         self.assertEqual(result.evaluations, 1)
 
+    def test_budget_limits_exact_evaluations(self):
+        baseline = qaoa_energy(self.costs, math.pi / 4, math.pi / 8)
+        first = optimize_with_recursive_sieve(self.costs, max_evaluations=1)
+        self.assertEqual(first.evaluations, 1)
+        self.assertAlmostEqual(first.expected_energy, baseline, places=12)
+        limited = optimize_with_recursive_sieve(
+            self.costs, angle_bits=4, sweeps=2, max_evaluations=5
+        )
+        self.assertEqual(limited.evaluations, 5)
+        self.assertLessEqual(limited.expected_energy, baseline + 1e-12)
+
     def test_invalid_inputs(self):
         with self.assertRaises(ValueError):
             qaoa_probabilities([0, -1, -2], .1, .2)
@@ -63,6 +74,8 @@ class SieveQAOATests(unittest.TestCase):
             optimize_with_recursive_sieve(self.costs, sweeps=0)
         with self.assertRaises(ValueError):
             optimize_with_recursive_sieve(self.costs, initial_angles=(0,))
+        with self.assertRaises(ValueError):
+            optimize_with_recursive_sieve(self.costs, max_evaluations=0)
 
 
 if __name__ == "__main__":
