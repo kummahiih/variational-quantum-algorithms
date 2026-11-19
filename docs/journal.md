@@ -154,3 +154,24 @@ Lean checks the **integer sum theorem** from the actual sieve ordering. The rati
 Key machine-checked statements: `positiveSieve_histogram_certificate` (finite sieve structure), `firstHitTrial_block` and `firstHitTrial_boundary` (first-hit ranks), `actualFirstHit_total` (sum over all cluster positions equals weighted rank total), and `actualFirstHit_total_formula` (closed form).
 
 **Scope and stopping point.** This completes the intended mathematical argument for solid power-of-two clusters of length at least two. The singleton case `m=1` has expectation `(N+1)/2` for any permutation of `N` keys, but is not covered by this final Lean theorem because the Python algorithm yields zero last. Non-power-of-two lengths can still be evaluated exactly with `src/cluster_expectation.py`. No further formal proofs are planned for now; focus can shift to VQA experiments.
+
+## 2026-11-19 — Recursively ordered dyadic sieve variant
+
+Added [`src/recursive_dyadic_sieve.py`](../src/recursive_dyadic_sieve.py) as a **second algorithm**, without changing [the original sieve](../src/dyadic_sieve.py). Both visit the same coarse-to-fine refinement levels, but the original enumerates keys in ascending order within each level, whereas the new variant enumerates the indices at each level in **bit-reversal order**. This is the finite base-2 van der Corput order with zero placed last.
+
+For four bits:
+
+```text
+                    original                 recursively ordered
+level 0             8                        8
+level 1             4, 12                    4, 12
+level 2             2, 6, 10, 14             2, 10, 6, 14
+level 3             1, 3, 5, 7, 9, 11, 13, 15 1, 9, 5, 13, 3, 11, 7, 15
+last                0                        0
+```
+
+The within-level permutation is computed iteratively by reversing the `level` index bits; no recursion depth or external dependency is required. Both implementations expose `keys(n_bits)` and MSB-first `vectors(n_bits)`.
+
+This matters for **non-solid successful sets**: on 4 bits, successful keys `{6, 14}` are hit on trial 5 by the original sieve and trial 6 by the recursive variant, whereas `{10, 14}` reverses the advantage (trials 6 versus 5). For uniformly located **solid clusters of power-of-two length**, the exact average remains the same because the order only permutes the first `N/m-1` positive multiples of `m`; this preservation has been **checked in Python**, not separately proved for the variant in Lean.
+
+Added [`tests/test_recursive_dyadic_sieve.py`](../tests/test_recursive_dyadic_sieve.py) to check the four-bit sequence, complete coverage and uniqueness, equivalence of refinement-level sets, examples of non-solid first hits, and the expected-time formula for power-of-two solid clusters. The six new tests passed in a local Python test run. The existing Lean formalization concerns the original ordering; no additional proofs are planned for this variant at present.
