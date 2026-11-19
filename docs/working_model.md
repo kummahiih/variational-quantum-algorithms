@@ -10,8 +10,8 @@ Imagine trying to color the vertices of a graph black or white so that as many e
 
 **QAOA** (Quantum Approximate Optimization Algorithm) is a parameterized quantum circuit that prepares a *probability distribution over candidate colorings*. It has two tunable angles in the one-layer case:
 
-- **$\gamma$ ($\gamma$):** controls a cost-dependent phase applied to each candidate coloring.
-- **$\beta$ ($\beta$):** controls a mixer that combines those phases through quantum interference.
+- **Gamma ($\gamma$):** controls a cost-dependent phase applied to each candidate coloring.
+- **Beta ($\beta$):** controls a mixer that combines those phases through quantum interference.
 
 Useful angles can make good solutions more likely when the circuit is measured. But the angles are not known in advance: a **classical outer-loop optimizer** must choose them.
 
