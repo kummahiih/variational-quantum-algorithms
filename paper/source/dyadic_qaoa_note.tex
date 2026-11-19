@@ -1,0 +1,173 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=23mm,headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,threeparttable}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{nosep,leftmargin=*}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize Dyadic sampling and QAOA: research note}
+\fancyhead[R]{\footnotesize Draft, 20 November 2026}
+\fancyfoot[C]{\thepage}
+\newtheorem{proposition}{Proposition}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\key}{\operatorname{key}}
+\newcommand{\vdc}{\operatorname{rev}}
+\title{\bfseries Coarse-to-Fine Dyadic Sampling:\\An Exact First-Hit Result and an Exploratory QAOA Benchmark}
+\author{\textit{Author name and affiliation to be confirmed before deposit}}
+\date{20 November 2026\\[3pt]\small Technical research note --- draft for verification, not peer reviewed}
+\begin{document}
+\maketitle
+\vspace{-7mm}
+\begin{abstract}
+We study deterministic coarse-to-fine visits to a finite binary key space and an exploratory use of such visits to select parameters of a one-layer quantum approximate optimization algorithm (QAOA). Two complete orders are considered: an ascending-within-level dyadic midpoint order and a bit-reversed-within-level order equivalent to a finite van der Corput schedule with zero last. For a uniformly translated contiguous successful interval of power-of-two length $m\ge2$ among $N=2^n$ keys, we derive the exact mean first-hit rank of the original order, $N(N-m+2)/[2m(N-m+1)]$. The corresponding integer sum for the original order has been formalized in Lean in the accompanying project. We then benchmark deterministic and randomized orders when scanning discretized QAOA angles for five small MaxCut graphs at fixed \emph{exact-statevector} evaluation budgets. The recursive and original orders tie in aggregate on this limited set; a simple derivative-free pattern search is more robust by 20 evaluations. The data motivate further work on first-hit criteria and high-dimensional, noisy parameter optimization, but provide no evidence of quantum or universal optimization speedup.
+\end{abstract}
+\textbf{Keywords:} dyadic sampling; first-hit time; bit reversal; van der Corput; QAOA; MaxCut; Lean 4; reproducibility.
+
+\section{Introduction}
+Variational quantum algorithms select circuit parameters with a classical outer loop and obtain candidate solutions from a parameterized quantum state. The quantum approximate optimization algorithm (QAOA) is a standard example \cite{farhi2014}. When circuit evaluations are expensive, the \emph{order} in which an optimizer samples parameters can matter even if the candidate set is fixed. We examine two elementary dyadic schedules and separate a rigorous one-dimensional hitting result from a small computational study of parameter search.
+
+Dyadic refinement and digit-reversal sequences have longstanding antecedents in quasi-Monte Carlo sampling and discrepancy theory \cite{matousek1999}. Low-discrepancy ideas have also been used in variational optimization, including Bayesian optimization \cite{iannelli2021} and Halton-initialized differential evolution \cite{failde2023}. We therefore do \emph{not} claim to invent bit reversal or a new QAOA ansatz. The intended contribution is a precisely stated, formally supported first-hit model and a reproducible, controlled exploratory comparison of two particular schedules in a VQA setting.
+
+\section{Two finite dyadic visiting orders}
+Let $N=2^n$, with keys $\{0,1,\ldots,N-1\}$. At refinement level $\ell\in\{0,\ldots,n-1\}$ define
+\begin{equation}
+ k_{\ell,j}=(2j+1)2^{n-\ell-1},\quad j=0,\ldots,2^\ell-1.\label{eq:keys}
+\end{equation}
+Both schedules visit levels from coarse to fine, then visit key zero last. They differ \emph{only in the ordering within a level}. The original schedule lists $k_{\ell,j}$ for ascending $j$; the recursive schedule lists $k_{\ell,\vdc_{\ell}(j)}$, where $\vdc_\ell$ reverses the $\ell$ bits of $j$. Thus the second schedule is a finite base-2 bit-reversal/van der Corput order, shifted to place zero last. Both are complete, without repeated keys.
+
+For $n=4$, the original order begins $8,4,12,2,6,10,14$, while the recursive order begins $8,4,12,2,10,6,14$. Figure~\ref{fig:orders} shows the full sequences. The shared dyadic levels guarantee identical sampled \emph{sets} at refinement boundaries; the within-level permutation can alter early discovery within a level.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.83\linewidth]{figures/sieve_orders.pdf}
+\caption{The two complete four-bit visiting orders (zero last). The schedules differ after the first refinement levels, not in their final coverage.}\label{fig:orders}
+\end{figure}
+
+\section{An exact first-hit result}
+Suppose one successful set is a \emph{solid} integer interval $I_a=\{a,\ldots,a+m-1\}$ of length $m=2^r$, with $2\le m\le N$. The start $a$ is uniformly distributed over $0,\ldots,N-m$. Let $T(a)$ denote the one-based position of the first key of $I_a$ in the original dyadic schedule.
+
+\begin{proposition}[Contiguous power-of-two first hit]\label{prop:hit}
+For $N=2^n$ and $m=2^r$ with $2\le m\le N$, the original dyadic order satisfies
+\begin{equation}\label{eq:sum}
+\sum_{a=0}^{N-m}T(a)=\frac{N(N-m+2)}{2m},
+\end{equation}
+and hence
+\begin{equation}\label{eq:expect}
+\boxed{\E[T]=\frac{N(N-m+2)}{2m(N-m+1)}.}
+\end{equation}
+\end{proposition}
+\textit{Proof sketch.} Set $q=N/m$. The first $q-1$ positive samples in the original order are exactly the nonzero multiples of $m$, in some order. Each such multiple $jm$ corresponds to exactly $m$ interval starts $(j-1)m+1,\ldots,jm$, none of whose intervals contain another nonzero multiple of $m$. Therefore each first-hit rank $1,\ldots,q-1$ occurs exactly $m$ times among positive starts. The sole remaining start $a=0$ first hits at rank $q$ (the next sample $m/2$). Consequently
+\begin{equation}
+\sum_a T(a)=m\sum_{t=1}^{q-1}t+q
+=\frac{m q(q-1)}2+q
+=\frac{N(N-m+2)}{2m}.
+\end{equation}
+Uniform averaging over the $N-m+1$ starts yields \eqref{eq:expect}. $\square$
+
+The exact \emph{integer first-hit sum identity}, connected to the concrete original schedule, is machine-checked in the repository's Lean module \texttt{lean/FirstHitSum.lean}; the rational expectation in \eqref{eq:expect} is the mathematical corollary after division. The repository owner previously reported a successful 19-job Lean build. We did not rerun Lean in the current preparation environment. The $m=1$ case and arbitrary non-power-of-two lengths are outside that final formal theorem. For the recursive schedule, the same special-model expectation has been checked by Python enumeration, not independently formalized in Lean.
+
+For comparison, a uniformly random permutation has expected first-hit rank $(N+1)/(m+1)$ for any fixed successful set of size $m$. The difference from \eqref{eq:expect} is
+\begin{equation}
+\frac{(N-m)(N+2)(m-1)}{2m(m+1)(N-m+1)},
+\end{equation}
+which is positive for $1<m<N$. This comparison is \emph{specific to the interval model}, not a guarantee for fragmented hit sets or circuit-angle landscapes.
+
+\section{Application: one-layer QAOA angle scans}
+For graph $G=(V,E)$, a bitstring $x\in\{0,1\}^{|V|}$ defines the negative MaxCut cost
+\begin{equation}
+ f(x)=-\sum_{(u,v)\in E}(x_u\oplus x_v).
+\end{equation}
+The diagonal cost Hamiltonian satisfies $H_C|x\rangle=f(x)|x\rangle$. The one-layer state, with the transverse-field mixer $H_M=\sum_j X_j$, is
+\begin{equation}
+ |\psi(\gamma,\beta)\rangle=e^{-i\beta H_M}e^{-i\gamma H_C}|+\rangle^{\otimes n},
+\quad E(\gamma,\beta)=\sum_x f(x)|\langle x|\psi\rangle|^2.\label{eq:qaoa}
+\end{equation}
+The algorithm searches \emph{angles}, not binary solutions. For a $b$-bit angle grid, each coordinate candidate is $\theta_k=2\pi k/2^b$. It scans all gamma candidates in a prescribed order with beta fixed, retains the best, then scans beta with gamma fixed; here $b=4$ and at most 65 energy evaluations, including initialization. Early termination can happen at an energy target or budget cap. The underlying code computes exact noiseless statevectors and scales as $O(n2^n)$ time and $O(2^n)$ memory per evaluation; an evaluation is \emph{not} a physical shot.
+
+As a sanity check, the four-vertex cycle has
+\begin{equation}
+E(\gamma,\beta)=-2+\sin(4\beta)\sin(2\gamma).
+\end{equation}
+The documented default search moves from $(\gamma,\beta)=(\pi/4,\pi/8)$, where $E=-1$, to $(3\pi/4,\pi/8)$, where $E=-3$. The two optimal cut strings jointly have probability $17/32=53.125\%$. The resulting expected cut of three edges (75\% of four) is a familiar $p=1$ cycle benchmark, not a novel QAOA approximation guarantee \cite{farhi2014}.
+
+\section{Exploratory benchmark}
+\subsection{Design and accounting}
+Five fixed small graphs are tested: a four-cycle, triangle, five-vertex path, five-vertex complete graph, and six-vertex ladder. Each has three fixed starting angle pairs: $(\pi/4,\pi/8)$, $(\pi/8,\pi/4)$, and $(3\pi/8,3\pi/8)$. Six strategies are compared under the same cap of 65 \emph{exact-statevector energy evaluations}:
+\begin{itemize}
+\item recursive sieve, original sieve, ascending-grid, and shuffled-grid \emph{coordinate scans} (same optimizer, different candidate orders);
+\item random joint-angle grid pairs sampled without replacement (a different two-dimensional search);
+\item a simple derivative-free pattern search, polling coordinate perturbations and halving the step after unsuccessful polls (not a library implementation of COBYLA or Rotosolve).
+\end{itemize}
+Shuffled order and random joint pairs use 12 fixed random seeds per graph/start. Thus the experiment contains 15 deterministic runs for each deterministic method and 180 runs for each randomized method, totaling 420 records. Runs from different seeds within the same graph/start are \emph{not independent problem instances}.
+
+For each graph, an \emph{offline} 16-by-16 exhaustive angle-grid scan gives $E_{\rm ref}$; this requires 256 additional exact evaluations per graph, excluded from optimizer budgets. The run-specific threshold is defined \emph{retrospectively} as
+\begin{equation}
+\tau=E_0-0.8(E_0-E_{\rm ref}).\label{eq:threshold}
+\end{equation}
+This construction is a controlled benchmark normalization, not a free target-selection oracle. We report the fraction of runs reaching $E\le\tau$ by evaluation budget $B$, and the normalized improvement $(E_0-E_{\rm best,B})/(E_0-E_{\rm ref})$. Optimal-cut probabilities are evaluated from the best-energy state and are not the same as hit probabilities for \eqref{eq:threshold}.
+
+\subsection{Results}
+\begin{table}[ht]
+\centering\small
+\begin{threeparttable}
+\caption{Descriptive results from the 420-run small-graph study. Percentages are hit fractions by budget, not statistical confidence bounds.}\label{tab:results}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method & Runs & Hit@10 & Hit@20 & Hit@65\\
+\midrule
+Recursive sieve & 15 & 60.0\% & 66.7\% & 86.7\%\\
+Original sieve & 15 & 60.0\% & 66.7\% & 86.7\%\\
+Ascending grid & 15 & 53.3\% & 66.7\% & 86.7\%\\
+Shuffled coordinate order & 180 & 51.1\% & 66.7\% & 86.7\%\\
+Random joint pairs & 180 & 52.8\% & 71.1\% & 95.6\%\\
+Pattern search & 15 & 40.0\% & 100.0\% & 100.0\%\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}\footnotesize
+\item All reported evaluations are noiseless exact-statevector energy computations. No uncertainty estimates or inferential comparison is claimed.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.86\linewidth]{figures/target_hits.pdf}
+\caption{Observed time-to-target curves for six parameter-search methods; target defined by \eqref{eq:threshold}. The collection comprises deliberately selected tiny problems, not a population sample.}\label{fig:results}
+\end{figure}
+
+The original and recursive orders are tied in \emph{aggregate} on this design; both reach the target in 86.7\% of the 15 graph/start conditions by 65 evaluations. Their early ranks may still differ: on the four-cycle at the default start, the original first attains the target at evaluation 6, while the recursive reaches it at evaluation 7. Random joint-angle search succeeds in 95.6\% of its 180 seeded runs by 65 evaluations. Pattern search reaches the specified thresholds in all 15 deterministic graph/start conditions by 20 evaluations. These are descriptive, method-dependent findings on a small chosen collection, not evidence that the pattern method is generally superior.
+
+Two unfavorable initial conditions demonstrate a limitation of coordinate scans: the four ordering variants can plateau because the objective does not improve along either chosen coordinate separately. A different candidate permutation cannot repair this underlying coupling. Complete scans of the same fixed coordinate candidates also cannot improve the minimum within that scan merely by reordering them, except insofar as tie-breaking changes later trajectories.
+
+\section{Verification, limitations, and outlook}
+The supplied reproducibility package includes CSV data for all 420 runs, code to regenerate the figures, benchmark source files, and an execution guide. In the local Python 3.13 environment, eight benchmark tests passed, the CSV was regenerated byte-for-byte identically, and direct Python enumeration checked the first-hit formula for 90 order/size configurations. The analytic four-cycle energy agreed with the simulator on the 16-by-16 grid within $1.8\times 10^{-15}$. A fresh Lean build and complete repository-wide test run were \emph{not} performed in this environment; these are release checks, not results to assume.
+
+The proof concerns one uniformly placed contiguous integer interval, while successful QAOA-angle sets may be disconnected, periodic, and multidimensional. The benchmark uses five tiny hand-selected graphs, a single angle resolution, noiseless dense states, and a retrospectively defined grid-reference target. The comparison omits wall-clock timing, finite-shot uncertainty, hardware compilation, and stronger well-tuned classical optimizers. Even the reference calculation must be counted in an operational deployment. In consequence, neither the theorem nor the simulations establish quantum advantage or a universal training benefit.
+
+Useful next steps include more independent graphs and initializations; multiple grids and circuit depths; comparisons with Rotosolve, Sobol/Halton, and strong derivative-free optimizers; statistically explicit time-to-target analysis; and shot-noise/hardware-cost models. The reproducible mathematical result and negative/mixed early optimization findings make the present work a starting point rather than a finished efficacy claim.
+
+\section*{Data, code, and attribution}
+The implementation lives in the \href{https://github.com/kummahiih/variational-quantum-algorithms}{project GitHub repository}. At the time of this draft the repository is private; the accompanying archive must be made accessible before an open Zenodo record can truthfully claim public code availability. A GitHub release, permanent DOI, confirmed authorship, affiliation, and final reproducibility checks are pending. The supplied archive has a source snapshot and data for this paper. No quantum computer was used. AI assistance contributed to drafting and implementation; all results require accountable human author verification before deposit.
+
+\begin{thebibliography}{9}
+\bibitem{farhi2014} E. Farhi, J. Goldstone, and S. Gutmann. \emph{A Quantum Approximate Optimization Algorithm}. arXiv:1411.4028 (2014). \url{https://arxiv.org/abs/1411.4028}.
+\bibitem{matousek1999} J. Matou\v{s}ek. \emph{Geometric Discrepancy: An Illustrated Guide}. Springer, 1999. \url{https://doi.org/10.1007/978-3-642-03942-3}.
+\bibitem{iannelli2021} G. Iannelli and K. Jansen. \emph{Noisy Bayesian optimization for variational quantum eigensolvers}. arXiv:2112.00426 (2021). \url{https://arxiv.org/abs/2112.00426}.
+\bibitem{failde2023} D. Fa\'{i}lde \emph{et al.} \emph{Using Differential Evolution to avoid local minima in Variational Quantum Algorithms}. Scientific Reports \textbf{13}, 16230 (2023). \url{https://doi.org/10.1038/s41598-023-43404-3}.
+\end{thebibliography}
+
+\section*{Declaration of generative AI use}
+OpenAI ChatGPT (GPT-6) was used as an assistive tool during preparation of this research note and related software work. Its assistance included structuring and editing manuscript text, explaining and reviewing mathematical arguments, identifying literature to check, proposing and reviewing benchmark methodology, and generating or revising portions of the Python simulator, test and analysis code, and plotting scripts. Numerical results and figures in this note come from executable Python calculations rather than generative image synthesis. AI output is not independent scientific verification, and the model is not an author. The human author is responsible for checking the proofs, program behavior, data, citations, interpretation, originality, and all final publication decisions. At the time of this draft, the eight benchmark-specific tests and stated Python cross-checks had run locally, but a fresh Lean build and complete repository-wide test run remained outstanding and must not be treated as completed.
+\end{document}

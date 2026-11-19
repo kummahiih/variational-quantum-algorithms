@@ -1,0 +1,43 @@
+Research note verification record
+Date: 20 November 2026
+Local runtime: Python 3.13.5; pdfTeX 1.40.26
+
+Source fidelity:
+  The six Python code_snapshot files were checked against the GitHub
+  repository's corresponding blob IDs. They match the original files.
+  In particular, the simulator and both sieve modules are not compact
+  mock/reimplementation copies.
+
+Python tests:
+  Command: (from code_snapshot/) python -m unittest discover -s tests -v
+  Result: 8 tests passed, 0 failures, 0 errors.
+  Scope: benchmark-specific tests only; not complete repository test suite.
+
+Benchmark:
+  Command: (from code_snapshot/)
+    python examples/benchmark_qaoa_optimizers.py --csv ../results/reproduced_exact_repository_code.csv
+  Result: 420 rows, exact SHA-256 byte match with qaoa_benchmark_raw.csv.
+  SHA-256 raw CSV: 6a8ac15eacf1162c72f31cd9f88c857303510ea2991ecfece1ddc6a054835088
+
+Independent numerical cross-check:
+  Command: (from package root) python source/verify_math.py
+  Result: 90 first-hit configurations verified by exhaustive enumeration
+          across both sieve orders and eligible n/m values.
+          256 QAOA four-cycle analytic-grid checks; max absolute error
+          1.78e-15 versus the exact statevector implementation.
+  These checks are numerical validation, not Lean theorems.
+
+LaTeX / PDF:
+  Command: pdflatex twice from package root
+  Result: successful, 5 A4 pages; last section is
+          'Declaration of generative AI use'.
+  PDF visually inspected via rendering.
+
+NOT done in this environment:
+  - Fresh `lake -d lean build` (lake not installed)
+  - Full original GitHub repository test suite from clean checkout
+  - Real quantum hardware experiments
+  - Peer review or Zenodo publication
+  - Independent author verification of all claims, sources, and rights
+
+Publication status: DRAFT; attribution and final checks remain with author.
