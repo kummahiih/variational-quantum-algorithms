@@ -12,8 +12,11 @@ import Lean
   solid-cluster histogram: for N = 2^(n+r) and m = 2^r, the first
   2^n - 1 positive samples are precisely the positive multiples of m.
 
-  The eventual first-hit histogram still needs a theorem about the
-  first sample strictly below m (and a formal first-hit-time function).
+  The proofs below establish the complete positive-multiple prefix,
+  the very next midpoint, and uniqueness of the hit for every
+  nonboundary aligned cluster-start block. A single theorem phrased in
+  terms of a numeric first-hit-time function and its trial histogram
+  remains to be assembled.
 -/
 
 def positiveSieve : Nat → List Nat
@@ -245,6 +248,11 @@ theorem positiveSieve_prefix_is_multiples (n r : Nat) :
   rw [positiveSieve_prefix]
   apply List.mem_map.mpr
   exact ⟨j, positiveSieve_complete n j hpos hlt, rfl⟩
+
+-- The order has no repeated keys even when truncated to its prefix.
+theorem positiveSieve_prefix_nodup (n r : Nat) :
+    ((positiveSieve (n + r)).take (2 ^ n - 1)).Nodup := by
+  exact (positiveSieve_nodup (n + r)).take _
 
 -- Every nonboundary solid cluster has exactly one successful key
 -- among the first q-1 samples, namely the next positive multiple of m.
