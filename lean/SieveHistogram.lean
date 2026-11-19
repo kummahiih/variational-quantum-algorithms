@@ -233,7 +233,6 @@ theorem aligned_cluster_unique (j k m a : Nat)
         calc
           (j + 2) * m = ((j + 1) + 1) * m := by
             congr 1
-            omega
           _ = (j + 1) * m + m := by
             simp [Nat.add_mul]
       omega
