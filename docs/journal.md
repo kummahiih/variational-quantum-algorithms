@@ -280,3 +280,13 @@ enumerates `2^n` cost values and amplitudes, so these figures are
 Future experiments could replace the exact simulator with a shot-based
 quantum backend and compare recursive sieve, original sieve, uniform
 grid, random, Sobol, and classical VQA optimizers at matched budgets.
+
+## 2026-11-19 — Session wrap-up and handover
+
+Research and implementation are **paused at a reproducible first prototype**. The repository now contains the original and recursively ordered dyadic sieves, the completed Lean first-hit **integer sum** theorem for the original sieve (owner-confirmed successful 19-job build), and an initial exact-statevector **one-layer QAOA** experiment whose free angles are chosen by the recursive sieve. No additional mathematical proofs, hardware integration, or optimizer benchmark has been completed in this wrap-up.
+
+The MaxCut simulation in [`examples/sieve_qaoa_maxcut.py`](../examples/sieve_qaoa_maxcut.py) is the current demonstration; [`src/sieve_qaoa.py`](../src/sieve_qaoa.py) supports target-energy and evaluation-budget stopping. The previous session reported **seven dedicated Python QAOA tests passing locally**, but the owner has not yet reported independent results for the latest Python draft. Earlier Lean verification does not establish the runtime behavior of the new QAOA code.
+
+**Research takeaway:** the sieve ordering is most relevant when searching for an acceptable angle under a **limited objective-evaluation budget or early stopping**. Exhaustively scanning an identical grid erases the ordering advantage for the grid's best attained energy. The ideal statevector evaluation count cannot be compared directly with physical QAOA shot counts, and the proven one-dimensional solid-cluster formula does not imply a quantum speedup or general benefit on irregular, multidimensional VQA landscapes.
+
+A copy-ready next-conversation prompt, source map, verified-versus-reported status, and restart commands are saved in **[`docs/handover.md`](handover.md)**. On resuming, start there and confirm tests before proceeding with any fair optimizer comparison. Further development is deferred until the owner chooses a new task.
