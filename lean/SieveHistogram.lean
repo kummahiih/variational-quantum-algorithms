@@ -235,6 +235,17 @@ theorem aligned_cluster_unique (j k m a : Nat)
     omega
 
 
+-- The first 2^n-1 samples consist of the q-1 nonzero multiples of
+-- m=2^r, with no repeats. They are also all strictly below N.
+theorem positiveSieve_prefix_is_multiples (n r : Nat) :
+    ∀ j, 0 < j → j < 2 ^ n →
+      2 ^ r * j ∈
+        (positiveSieve (n + r)).take (2 ^ n - 1) := by
+  intro j hpos hlt
+  rw [positiveSieve_prefix]
+  apply List.mem_map.mpr
+  exact ⟨j, positiveSieve_complete n j hpos hlt, rfl⟩
+
 -- Every nonboundary solid cluster has exactly one successful key
 -- among the first q-1 samples, namely the next positive multiple of m.
 -- This statement refers to the *actual* finite sieve list.
@@ -294,16 +305,6 @@ theorem positiveSieve_block_start_count (j m : Nat) :
     ((List.range m).map (fun i => j * m + i + 1)).length = m := by
   simp
 
--- The first 2^n-1 samples consist of the q-1 nonzero multiples of
--- m=2^r, with no repeats. They are also all strictly below N.
-theorem positiveSieve_prefix_is_multiples (n r : Nat) :
-    ∀ j, 0 < j → j < 2 ^ n →
-      2 ^ r * j ∈
-        (positiveSieve (n + r)).take (2 ^ n - 1) := by
-  intro j hpos hlt
-  rw [positiveSieve_prefix]
-  apply List.mem_map.mpr
-  exact ⟨j, positiveSieve_complete n j hpos hlt, rfl⟩
 
 #eval positiveSieve 4
 -- [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]
