@@ -269,7 +269,9 @@ theorem positiveSieve_range_rank_sum (n : Nat) :
   have hp := (positiveSieve_range_perm n).map
     (fun key => trialRank key (positiveSieve n))
   have hs := hp.sum_nat
-  simpa [List.map_map] using hs
+  simp only [List.map_map] at hs
+  -- Function composition is definitionally the same as this lambda.
+  exact hs
 
 -- The previously proved weighted-rank total is *exactly* the sum
 -- of firstHitTrial over all possible cluster starts (m >= 2).
