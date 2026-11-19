@@ -98,12 +98,16 @@ def optimize_with_recursive_sieve(
     sweeps: int = 2,
     initial_angles: tuple[float, float] = (pi / 4, pi / 8),
     target_energy: float | None = None,
+    max_evaluations: int | None = None,
 ) -> SieveQAOAResult:
     """Tune QAOA's two free angles by repeated coordinate-wise sieve scans.
 
     On each coordinate, try angles 2*pi*k / 2**angle_bits in the order
     given by recursive_dyadic_sieve.keys(angle_bits). Retain the best angle
-    with the other coordinate fixed. Return early if target_energy is met.
+    with the other coordinate fixed. Return early if target_energy is met
+    or max_evaluations exact energy evaluations (including the initial one)
+    are used. The sieve order matters for early stopping or a finite budget;
+    complete grid scans visit the same candidate set regardless of order.
 
     The starting angles are deliberately nonzero: if gamma=0 or beta=0,
     the one-layer QAOA energy can be flat when varying the other angle.
@@ -121,6 +125,8 @@ def optimize_with_recursive_sieve(
         raise ValueError("initial_angles must be two finite angles")
     if target_energy is not None and not isfinite(target_energy):
         raise ValueError("target_energy must be finite")
+    if max_evaluations is not None and max_evaluations < 1:
+        raise ValueError("max_evaluations must be positive")
 
     angles = list(initial_angles)
     grid_size = 1 << angle_bits
@@ -135,7 +141,7 @@ def optimize_with_recursive_sieve(
             probabilities=_probabilities(values, *angles),
         )
 
-    if target_energy is not None and energy <= target_energy:
+    if (target_energy is not None and energy <= target_energy) or max_evaluations == 1:
         return finish()
 
     for _ in range(sweeps):
@@ -151,7 +157,8 @@ def optimize_with_recursive_sieve(
                 evaluations += 1
                 if trial_energy < best_energy - 1e-12:
                     best_angle, best_energy = candidate, trial_energy
-                if target_energy is not None and best_energy <= target_energy:
+                if ((target_energy is not None and best_energy <= target_energy)
+                        or (max_evaluations is not None and evaluations >= max_evaluations)):
                     angles[coordinate] = best_angle
                     energy = best_energy
                     return finish()
