@@ -126,6 +126,76 @@ theorem positiveSieve_prefix (n r : Nat) :
   rw [← hlen]
   exact List.take_append_length
 
+
+-- The odd-key group always starts with key 1.
+theorem oddGroup_head (n : Nat) :
+    ∃ tail : List Nat,
+      (List.range (2 ^ n)).map (fun i => 2 * i + 1) = 1 :: tail := by
+  have hp : 0 < 2 ^ n := Nat.pow_pos (by omega)
+  have hn : 2 ^ n = (2 ^ n - 1) + 1 := by omega
+  rw [hn, List.range_succ_eq_map]
+  exact ⟨_, rfl⟩
+
+-- After the first 2^n - 1 multiples of m = 2^(r+1), the very
+-- next sample is m/2 = 2^r (the new refinement level's first key).
+theorem positiveSieve_scaled_next (n r : Nat) :
+    ∃ tail : List Nat,
+      positiveSieve (n + r + 1) =
+        (positiveSieve n).map (fun x => 2 ^ (r + 1) * x) ++
+        (2 ^ r :: tail) := by
+  induction r with
+  | zero =>
+      obtain ⟨tail, hodd⟩ := oddGroup_head n
+      refine ⟨tail, ?_⟩
+      simp [positiveSieve, hodd, Nat.pow_succ]
+  | succ r ih =>
+      obtain ⟨tail, htail⟩ := ih
+      refine ⟨tail.map (fun x => 2 * x) ++
+        (List.range (2 ^ (n + r + 1))).map (fun i => 2 * i + 1), ?_⟩
+      have hindex : n + (r + 1) + 1 = (n + r + 1) + 1 := by omega
+      rw [hindex, positiveSieve, htail]
+      simp [List.map_append, List.map_map, List.append_assoc,
+        Nat.pow_succ, Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
+
+-- This also identifies the boundary trial without a probabilistic
+-- or first-hit assumption.
+theorem positiveSieve_first_q (n r : Nat) :
+    (positiveSieve (n + r + 1)).take (2 ^ n) =
+      (positiveSieve n).map (fun x => 2 ^ (r + 1) * x) ++
+      [2 ^ r] := by
+  obtain ⟨tail, htail⟩ := positiveSieve_scaled_next n r
+  rw [htail]
+  have hlen :
+      ((positiveSieve n).map (fun x => 2 ^ (r + 1) * x)).length + 1 =
+        2 ^ n := by
+    simpa only [List.length_map] using positiveSieve_length n
+  rw [← hlen, List.take_length_add_append]
+  rfl
+
+-- Every key from the earlier prefix is at least m, so none can
+-- hit the cluster [0,m). Its first hit is the next key m/2.
+theorem positiveSieve_prefix_ge (n r x : Nat)
+    (hx : x ∈ (positiveSieve (n + r)).take (2 ^ n - 1)) :
+    2 ^ r ≤ x := by
+  rw [positiveSieve_prefix] at hx
+  obtain ⟨j, hj, hkey⟩ := List.mem_map.mp hx
+  have hpos := (positiveSieve_bounds n j hj).1
+  have hle : (2 ^ r) * 1 ≤ (2 ^ r) * j :=
+    Nat.mul_le_mul_left (2 ^ r) (by omega)
+  omega
+
+theorem positiveSieve_boundary_new_hit (n r : Nat) :
+    2 ^ r < 2 ^ (r + 1) ∧
+    (∀ x ∈ (positiveSieve (n + r + 1)).take (2 ^ n - 1),
+      2 ^ (r + 1) ≤ x) := by
+  constructor
+  · have hp : 0 < 2 ^ r := Nat.pow_pos (by omega)
+    rw [Nat.pow_succ]
+    omega
+  · intro x hx
+    have hb := positiveSieve_prefix_ge n (r + 1) x
+    simpa [Nat.add_assoc] using hb hx
+
 -- Each positive multiple of m contributes precisely the m cluster
 -- starts immediately preceding that multiple. This is the arithmetic
 -- reason the first-hit histogram is flat.
