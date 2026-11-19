@@ -215,3 +215,68 @@ This counts **individual, deterministic objective evaluations**, stopping at the
 Grover's comparison concerns **coherent quantum oracle calls**, not circuit runs of the same cost as classical evaluations. The real resource measure should record objective-function queries, optimizer iterations, quantum circuit executions and shots, oracle/embedding overhead, wall-clock time, and achieved hit probability separately. For example, **16** outer decisions requiring **100** optimization iterations with **100** shots each would consume **160,000** circuit shots, *hypothetically*, before other overhead.
 
 **Research direction; no new proof required.** Test VQA/QAOA as a **region-proposal mechanism** followed by either the original or recursive dyadic sieve inside promising regions. Also compare sieve-selected restarts against purely random, Sobol, or Halton initializations. An instructive first experiment would compare a known contiguous hit region with fragmented/non-solid regions, holding total classical evaluations or circuit-shot budgets and desired success probability fixed. **No VQA hybrid or benchmark is implemented yet**, and the new comparison is a proposal rather than a demonstrated speedup. External pointers are collected in [neighbors.md](neighbors.md).
+
+## 2026-11-19 — First runnable VQA draft with recursive-sieve angle search
+
+Implemented [`src/sieve_qaoa.py`](../src/sieve_qaoa.py) and
+[`examples/sieve_qaoa_maxcut.py`](../examples/sieve_qaoa_maxcut.py).
+This is a genuine **one-layer QAOA ansatz**, simulated with a
+dependency-free, exact classical statevector rather than quantum hardware.
+The problem is a cost `f(x)` over binary solutions `x`, and the **free
+variational angles** `gamma` and `beta` are selected by the existing
+[`recursive_dyadic_sieve.keys`](../src/recursive_dyadic_sieve.py).
+
+For a diagonal cost Hamiltonian `H_C |x> = f(x) |x>`, the ansatz and its
+energy are
+
+```math
+|\psi(\gamma,\beta)\rangle
+= e^{-i\beta\sum_{j=0}^{n-1}X_j}
+  e^{-i\gamma H_C}|+\rangle^{\otimes n},
+\qquad
+E(\gamma,\beta)
+= \sum_{x\in\{0,1\}^n} f(x)\,|\langle x|\psi(\gamma,\beta)\rangle|^2.
+```
+
+**Search strategy.** The angles are discretized as
+`theta_k = 2*pi*k / 2**angle_bits`. The recursive sieve orders the
+candidate `k` values coarse-to-fine. The optimizer first scans `gamma`
+while holding `beta` fixed, then scans `beta` while holding `gamma`
+fixed; it repeats this coordinate search for the requested number of
+sweeps. The initial angles are nonzero to avoid the flat single-parameter
+search produced by starting this one-layer ansatz at both angles zero.
+`target_energy` can stop a search once a **sufficiently low expected
+energy** is found, and `max_evaluations` caps total exact energy
+evaluations. Neither is a Grover oracle.
+
+**Four-vertex MaxCut example.** The objective is the negative number of
+cut edges on the cycle `0-1-2-3-0`. With `angle_bits=4` and `sweeps=2`,
+the local noiseless simulation reported:
+
+- Initial expected energy: **-1.0**.
+- Optimized expected energy: **-3.0**.
+- Optimized angles: `gamma ≈ 2.35619`, `beta ≈ 0.39270`.
+- **65** exact statevector energy evaluations (one initial point plus
+  four scans of 16 grid angles).
+- The most likely measured binary strings are `0101` and `1010`,
+  each with probability approximately **0.266**, corresponding to
+  maximum cuts of four edges. Their combined probability is about
+  **0.531**, not certainty of observing a ground-state bitstring.
+
+Seven dedicated tests in [`tests/test_sieve_qaoa.py`](../tests/test_sieve_qaoa.py)
+passed locally, covering the cost encoding, state normalization,
+uniform output at zero cost angle, actual energy improvement, sieve
+invocation, early stopping, budget, and invalid input handling. No Lean
+work was added.
+
+**Scope and interpretation.** The sieve searches **VQA circuit angles**;
+the QAOA output distribution samples **binary solutions**. A full scan
+of the same finite angle grid has the same candidates regardless of
+permutation: the recursive ordering can change *time to a target* or
+the outcome under a finite candidate budget, not the best value
+after an exhaustive scan. Exact statevector evaluation already
+enumerates `2^n` cost values and amplitudes, so these figures are
+**not hardware shot counts, scaling results, or a quantum advantage**.
+Future experiments could replace the exact simulator with a shot-based
+quantum backend and compare recursive sieve, original sieve, uniform
+grid, random, Sobol, and classical VQA optimizers at matched budgets.
