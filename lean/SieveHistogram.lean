@@ -314,6 +314,31 @@ theorem positiveSieve_block_start_count (j m : Nat) :
   simp
 
 
+
+-- Combined certificate for m = 2^(r+1) and q = 2^n:
+--   * q-1 distinct positive multiples of m precede m/2;
+--   * each of the m starts in every nonboundary block has a
+--     unique successful key in that q-1-key prefix.
+-- Consequently the successful trial for each block is the rank
+-- of its multiple, and each of the q-1 ranks occurs m times.
+theorem positiveSieve_histogram_certificate (n r : Nat) :
+    (positiveSieve (n + r + 1)).take (2 ^ n) =
+      (positiveSieve n).map (fun x => 2 ^ (r + 1) * x) ++ [2 ^ r]
+    ∧
+    (∀ j, j + 1 < 2 ^ n →
+      ∀ i < 2 ^ (r + 1),
+        ∃! key : Nat,
+          key ∈ (positiveSieve (n + r + 1)).take (2 ^ n - 1) ∧
+          j * 2 ^ (r + 1) + i + 1 ≤ key ∧
+          key < j * 2 ^ (r + 1) + i + 1 + 2 ^ (r + 1))
+    ∧
+    ((positiveSieve (n + r + 1)).take (2 ^ n - 1)).Nodup := by
+  refine ⟨positiveSieve_first_q n r, ?_, ?_⟩
+  · intro j hj i hi
+    have h := positiveSieve_cluster_block n (r + 1) j hj i hi
+    simpa [Nat.add_assoc] using h
+  · simpa [Nat.add_assoc] using (positiveSieve_prefix_nodup n (r + 1))
+
 #eval positiveSieve 4
 -- [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]
 #eval (positiveSieve 4).take 3
