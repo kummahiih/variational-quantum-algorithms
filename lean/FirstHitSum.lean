@@ -137,24 +137,24 @@ theorem trialRank_mul_map (factor key : Nat) (hfactor : 0 < factor) :
         simp [trialRank, h, hmul, ih]
 
 -- A nonboundary cluster is first hit at the rank of the one
--- positive multiple of m in its interval, in the actual q-key prefix.
+-- positive multiple of m in its interval, in the actual q-key samplePrefix.
 theorem actualFirstHit_block (n r j i : Nat)
     (hj : j + 1 < 2 ^ n) (hi : i < 2 ^ (r + 1)) :
     actualFirstHit n r (j * 2 ^ (r + 1) + i + 1) =
       trialRank (j + 1) (positiveSieve n) := by
   let m := 2 ^ (r + 1)
   let start := j * m + i + 1
-  let prefix := (positiveSieve n).map (fun x => m * x)
+  let samplePrefix := (positiveSieve n).map (fun x => m * x)
   have hprefix :
-      (positiveSieve (n + r + 1)).take (2 ^ n - 1) = prefix := by
-    simpa [prefix, m, Nat.add_assoc] using
+      (positiveSieve (n + r + 1)).take (2 ^ n - 1) = samplePrefix := by
+    simpa [samplePrefix, m, Nat.add_assoc] using
       positiveSieve_prefix n (r + 1)
   have hfull :
       (positiveSieve (n + r + 1)).take (2 ^ n) =
-        prefix ++ [2 ^ r] := by
-    simpa [prefix, m, Nat.add_assoc] using
+        samplePrefix ++ [2 ^ r] := by
+    simpa [samplePrefix, m, Nat.add_assoc] using
       positiveSieve_first_q n r
-  have hmem : m * (j + 1) ∈ prefix := by
+  have hmem : m * (j + 1) ∈ samplePrefix := by
     apply List.mem_map.mpr
     exact ⟨j + 1, positiveSieve_complete n (j + 1)
       (by omega) hj, rfl⟩
@@ -169,7 +169,7 @@ theorem actualFirstHit_block (n r j i : Nat)
     dsimp [start]
     rw [hprod]
     constructor <;> omega
-  have hstable := firstHitTrial_append_hit start m prefix [2 ^ r]
+  have hstable := firstHitTrial_append_hit start m samplePrefix [2 ^ r]
     ⟨m * (j + 1), hmem, hbounds.1, hbounds.2⟩
   have hblock := firstHitTrial_block n r j i hj hi
   dsimp at hblock
@@ -269,7 +269,7 @@ theorem positiveSieve_range_rank_sum (n : Nat) :
   have hp := (positiveSieve_range_perm n).map
     (fun key => trialRank key (positiveSieve n))
   have hs := hp.sum_nat
-  simpa only [List.map_map] using hs
+  simpa [List.map_map] using hs
 
 -- The previously proved weighted-rank total is *exactly* the sum
 -- of firstHitTrial over all possible cluster starts (m >= 2).
@@ -278,8 +278,7 @@ theorem actualFirstHit_total (n r : Nat) :
       (actualFirstHit n r) =
     sieveClusterTrialTotal n r := by
   rw [actualFirstHit_sum_by_blocks, positiveSieve_range_rank_sum]
-  unfold sieveClusterTrialTotal
-  omega
+  simp [sieveClusterTrialTotal, Nat.add_comm]
 
 -- End-to-end unnormalized expectation theorem, established directly
 -- from the finite dyadic sample order with no histogram hypothesis.
