@@ -103,3 +103,22 @@ For $1<m<N$, this expectation is strictly less than the uniform-random-permutati
 At $m=1$ and $m=N$, the expectations agree.
 
 **Open formalization:** derive the histogram directly from the bounded dyadic sampling sequence in Lean, and prove the rational expectation/comparison theorem end-to-end. Non-power-of-two cluster lengths still use the exact finite-sum algorithm.
+
+
+## 2026-11-19 — Deriving the histogram from the actual sieve order
+
+The combinatorial argument behind the power-of-two closed form is now explicit. Put `N=2^(n+r)`, `m=2^r`, and `q=2^n`. The positive-key order admits the exact recurrence:
+
+```text
+positiveSieve(0)     = []
+positiveSieve(n + 1) = [2*x for x in positiveSieve(n)]
+                       ++ [1, 3, ..., 2^(n+1)-1].
+```
+
+This is the same coarse-to-fine order as Python's `keys(n)` before the final zero. In particular, its first `q-1` samples are `m` times the positive `n`-bit sieve order, so they are precisely the nonzero multiples of `m`, without repetition. For `m>1`, the next sample (trial `q`) is `m/2`; for `m=1`, trial `q=N` samples the final zero.
+
+For each multiple `j*m` with `1<=j<q`, exactly `m` cluster starts are associated with it: `(j-1)*m+1, ..., j*m`. A solid length-`m` cluster from any of these starts contains `j*m` and no other nonzero multiple of `m`. The only other start is zero; its first hit occurs at trial `q`. Hence the first-hit histogram has `m` occurrences of every trial `1,...,q-1` and one occurrence of trial `q`, establishing the arithmetic-series formula recorded above.
+
+Added [`lean/SieveHistogram.lean`](../lean/SieveHistogram.lean) to formalize the recursive finite order, key bounds, completeness and nonduplication, the scaled prefix, the next sample, and the uniqueness of the positive-prefix hit for each cluster-start block. This is the **direct connection to the concrete ordering** that was previously missing. The remaining formal packaging is to define a numerical first-hit-time function in Lean and prove its full histogram or sum theorem directly from these structural lemmas. The new Lean module has **not yet been compiled in the user's Lean environment**; the proofs are drafts until that verification completes.
+
+As an independent implementation cross-check, the same recursive positive-key construction matched Python's level-based generator for bit widths 0 through 9.
