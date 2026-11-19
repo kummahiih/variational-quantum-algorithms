@@ -95,7 +95,9 @@ theorem firstHitTrial_block (n r j i : Nat)
     have hprod : m * (j + 1) = j * m + m := by
       rw [Nat.mul_comm]
       exact hstep
+    have him : i < m := hi
     dsimp [start]
+    rw [hprod]
     constructor <;> omega
   have hfoundEq : m * (j + 1) = found :=
     hunique (m * (j + 1)) ⟨hmem, hbounds.1, hbounds.2⟩
@@ -127,7 +129,7 @@ theorem firstHitTrial_append_no_hit (start width : Nat) :
         intro x hx
         exact hno x (by simp [hx])
       have hr := ih after htail
-      simp [firstHitTrial, hhead, hr]
+      simp [firstHitTrial, hhead, hr, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
 
 -- The zero-start cluster [0,m) is not hit by any of the q-1
 -- nonzero multiples of m. Trial q samples m/2 and hits it.
@@ -154,7 +156,10 @@ theorem firstHitTrial_boundary (n r : Nat) :
       omega
     simp [firstHitTrial, hsmall]
   have hlength := positiveSieve_length n
-  have happend := firstHitTrial_append_no_hit 0 m before [2 ^ r] hno
+  have hno' : ∀ x : Nat, x ∈ before →
+      ¬ (0 ≤ x ∧ x < 0 + m) := by
+    simpa only [Nat.zero_add] using hno
+  have happend := firstHitTrial_append_no_hit 0 m before [2 ^ r] hno'
   change firstHitTrial (before ++ [2 ^ r]) 0 m = 2 ^ n
   rw [happend, htail]
   simpa [before] using hlength
@@ -184,7 +189,7 @@ theorem sum_ranks_tail (key : Nat) (xs : List Nat)
       intro heq
       apply hnot
       simpa [heq] using hx
-    simp [trialRank, hne, eq_comm]
+    simp [trialRank, hne]
   rw [hmap]
   exact sum_one_plus_map (fun x => trialRank x xs) xs
 
