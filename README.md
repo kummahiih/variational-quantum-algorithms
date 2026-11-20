@@ -1,5 +1,11 @@
 # Variational Quantum Algorithms
 
+## Preprint
+
+**Pauli Rikula**, *Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark*. [Zenodo record 24382960](https://zenodo.org/records/24382960) (author-provided publication link).
+
+The preprint is a research note, not a peer-reviewed journal article. The [paper PDF](paper/dyadic_qaoa_note.pdf), [editable LaTeX source](paper/source/dyadic_qaoa_note.tex), and [reproducibility materials](paper/README.md) are available in this repository. No quantum hardware performance or quantum speedup is claimed.
+
 A lightweight study project exploring variational quantum algorithms (VQAs), with room for IQM-compatible quantum software, CUDA experiments, and Lean proofs.
 
 ## Layout
@@ -37,7 +43,7 @@ Run from `src/` or add it to your Python import path. See
 [`docs/journal.md`](docs/journal.md) for the power-of-two solid-cluster
 finding-time proof. The new variant has not been formalized separately in Lean.
 
-## Draft VQA with recursive-sieve parameter tuning
+## One-layer QAOA with recursive-sieve parameter tuning
 
 [`src/sieve_qaoa.py`](src/sieve_qaoa.py) implements a small, **one-layer QAOA**
 for a binary-vector cost function. It prepares a uniform superposition,
@@ -65,3 +71,17 @@ of permutation. This is a small **classical exact-statevector simulation**,
 not a quantum-hardware implementation or evidence of quantum speedup.
 The diagonal cost list has `2**n` entries, so the simulator is not
 scalable to large `n`. See [`docs/journal.md`](docs/journal.md).
+
+## Benchmarks, verification and next questions
+
+The [optimizer benchmark](docs/qaoa_benchmark.md) compares recursive and original dyadic ordering against ascending/shuffled coordinate scans, random joint-angle sampling, and a simple derivative-free pattern search. It uses five small MaxCut graphs, three starting points, and up to 65 **exact statevector energy evaluations** per run. [Raw data and scripts](paper/README.md) document 420 runs. In this preliminary comparison, the two sieve orders tie in aggregate; pattern search reaches the defined target more reliably by 20 evaluations. These are limited, noiseless experiments, not universal performance claims.
+
+**Owner-reported verification (20 November 2026):** `lake -d lean build` succeeded (**19 jobs**) and `python -m unittest discover -s tests -v` passed (**29 tests**). The Lean proof formalizes the original sieve's integer first-hit sum under its stated assumptions; it does not prove a QAOA optimization advantage.
+
+```bash
+python examples/benchmark_qaoa_optimizers.py
+python -m unittest discover -s tests -v
+lake -d lean build
+```
+
+A potential future experiment is *recursive-sieve multistart plus pattern search*, compared with random/original-sieve multistart under identical energy-evaluation budgets. **This hybrid has not been implemented or benchmarked.** See [the working model](docs/working_model.md) and [research journal](docs/journal.md).
