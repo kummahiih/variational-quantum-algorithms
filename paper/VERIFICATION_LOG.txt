@@ -41,3 +41,13 @@ NOT done in this environment:
   - Independent author verification of all claims, sources, and rights
 
 Publication status: DRAFT; attribution and final checks remain with author.
+
+Author-reported verification (20 November 2026):
+  - From project repo: lake -d lean build
+    Result: Build completed successfully (19 jobs).
+  - From project repo: python -m unittest discover -s tests -v
+    Result: Ran 29 tests in 0.409s; OK.
+  - Source: terminal transcript supplied by the repository owner.
+  - This replaces the earlier status that these checks were still
+    outstanding; the preparation environment did not rerun Lean or
+    the complete original repository suite independently.

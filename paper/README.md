@@ -1,6 +1,6 @@
 # Dyadic sampling/QAOA research note — source and reproducibility files
 
-**Status:** Draft, 20 November 2026. This is a working paper, **not** a published or peer-reviewed article. The author name/affiliation, final independent verification, and Zenodo DOI are pending. The final paragraph of the manuscript is a **Declaration of generative AI use**.
+**Status:** Draft, 20 November 2026. This is a working paper, **not** a published or peer-reviewed article. The author is **Pauli Rikula**, with no institutional affiliation listed; the author reports a successful Lean build (19 jobs) and full Python test suite (29 tests). The final paragraph of the manuscript is a **Declaration of generative AI use**.
 
 The editable paper is [`source/dyadic_qaoa_note.tex`](source/dyadic_qaoa_note.tex). This folder keeps paper materials separate from the existing flat [`src/`](../src/) layout and [Lean proofs](../lean/). It is not the PhD handover.
 
@@ -12,12 +12,12 @@ The editable paper is [`source/dyadic_qaoa_note.tex`](source/dyadic_qaoa_note.te
 - `results/qaoa_benchmark_raw.csv`: 420 raw benchmark records (5 MaxCut graphs, 3 starts, 12 seeds per randomized method).
 - `results/qaoa_benchmark_summary.csv`: descriptive aggregate statistics.
 - `RELEASE_CHECKLIST.md`: final publication tasks for the human author.
-- `VERIFICATION_LOG.txt`: verification notes from preparation of this draft; **not** a fresh clean-checkout Lean build or repository-wide CI result.
+- `VERIFICATION_LOG.txt`: verification notes from preparation of this draft; includes the author-reported Lean build (19 jobs) and full Python unittest run (29 tests), separate from the preparation-environment numerical checks.
 - `ZENODO_METADATA_DRAFT.md`: proposed upload metadata with placeholders (not a DOI).
 
 **Figure 2 reading note:** Recursive (blue) and original (orange) sieve curves have identical aggregate success rates at the four reported budgets. The graph intentionally draws a two-color outlined trace so both coincident series are visible; no x/y values are shifted.
 
-The generated `figures/*.pdf`, `figures/*.png`, and compiled manuscript PDF are **build artifacts**, not tracked here. Generate them from the tracked CSV and plotting script before compiling the paper. No `code_snapshot/` duplicates are tracked in this repository, because the source modules already live in `src/`, `examples/`, and `tests/`.
+The generated `figures/*.pdf` and `figures/*.png` are **build artifacts**, not tracked here. The author-approved draft PDF `dyadic_qaoa_note.pdf` is tracked for Zenodo submission. Generate them from the tracked CSV and plotting script before compiling the paper. No `code_snapshot/` duplicates are tracked in this repository, because the source modules already live in `src/`, `examples/`, and `tests/`.
 
 ## Reproduce with Python 3.11+
 
@@ -48,6 +48,6 @@ For Lean verification, from the repository root:
 lake -d lean build
 ```
 
-The original mathematical result is the Lean-verified **integer sum identity** for the original dyadic order (under its assumptions); the expectation follows mathematically. A fresh Lean build was **not** completed in the paper-preparation environment. Do not claim a quantum speedup, superiority of bit-reversal sampling, or hardware-shot savings based on these results.
+The original mathematical result is the Lean-verified **integer sum identity** for the original dyadic order (under its assumptions); the expectation follows mathematically. The author reported a successful Lean build (19 jobs) from the project repository; it was not independently rerun in the paper-preparation environment. Do not claim a quantum speedup, superiority of bit-reversal sampling, or hardware-shot savings based on these results.
 
 **No Zenodo upload, DOI creation, or repository visibility change is part of these source files.**
