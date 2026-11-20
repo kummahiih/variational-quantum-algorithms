@@ -1,103 +1,137 @@
 # Handover for the next conversation
 
-**Repository:** [kummahiih/variational-quantum-algorithms](https://github.com/kummahiih/variational-quantum-algorithms)  
-**Last updated:** 2026-11-19  
-**State:** Paused after building a first, dependency-free QAOA simulation tuned with the recursive dyadic sieve. No new implementation or proof work is requested until the owner resumes.
+**Repository:** [kummahiih/variational-quantum-algorithms](https://github.com/kummahiih/variational-quantum-algorithms) (public)  
+**Last updated:** 2026-11-20  
+**Preprint:** [Zenodo record 24382960](https://zenodo.org/records/24382960) (record URL supplied by Pauli Rikula)  
+**State:** Two dyadic sampling orders, the original-sieve first-hit Lean proof, an exact-statevector one-layer QAOA simulator, six-method optimizer benchmark, and five-page preprint are checked in. **Recursive-sieve + pattern-search multistart is proposed but not implemented.** Await the owner's chosen next task.
 
-## Prompt to paste into a new conversation
+## Copy-ready prompt for the next session
 
-```text
-Continue my GitHub project kummahiih/variational-quantum-algorithms.
+~~~text
+Continue my GitHub project:
+https://github.com/kummahiih/variational-quantum-algorithms
 
-Please use the connected GitHub repository as the source of truth.
-Read AGENTS.md, README.md, docs/journal.md, docs/neighbors.md and
-docs/handover.md before proposing or changing anything. Keep the Python
-src/ layout flat and the Lean project minimal.
+Use the connected repository's main branch as the source of truth.
+First read AGENTS.md, README.md, docs/handover.md, docs/journal.md,
+docs/qaoa_benchmark.md, docs/neighbors.md, and paper/README.md.
+Keep src/ flat and the Lean project minimal. Do not add Lean proofs
+unless I explicitly request them.
 
-We have two distinct coarse-to-fine n-bit sampling algorithms:
-  src/dyadic_sieve.py             ascending order inside dyadic levels
-  src/recursive_dyadic_sieve.py   bit-reversed order inside each level
-Both enumerate every n-bit key exactly once, with zero last.
+The repository is public. The author is Pauli Rikula (no affiliation).
+The preprint URL I provided is https://zenodo.org/records/24382960.
+The paper PDF is paper/dyadic_qaoa_note.pdf, and editable LaTeX,
+benchmark CSVs and reproduction scripts are under paper/.
+The final paper section declares generative AI assistance.
 
-We proved an exact first-hit sum for uniformly positioned contiguous
-power-of-two clusters (m >= 2) in the original dyadic sieve. My Lean
-build succeeded with 19 jobs. We are stopping additional Lean work
-for now; do not add new proofs unless I explicitly ask.
+I ran lake -d lean build successfully (19 jobs) and
+python -m unittest discover -s tests -v (29 tests passed).
+These are independent owner-reported checks.
 
-We also implemented a small one-layer QAOA statevector simulator in
-src/sieve_qaoa.py. The recursive sieve chooses discretized free
-circuit angles gamma and beta, using coordinate scans, optional early
-energy threshold and evaluation budget. It does not run on quantum
-hardware and is not Grover search. There is a 4-vertex MaxCut example
-in examples/sieve_qaoa_maxcut.py and tests/test_sieve_qaoa.py.
+We implemented an original coarse-to-fine dyadic sieve and a
+recursive/bit-reversed dyadic sieve. The Lean theorem establishes
+the original sieve's integer first-hit sum for uniformly placed
+contiguous power-of-two hit clusters, under its assumptions.
+The corresponding expectation follows mathematically, but the
+recursive variant was not separately proven in Lean.
 
-The next useful experiment, when I request it, is to compare recursive
-sieve, original sieve, and conventional parameter optimizers at equal
-objective-evaluation/shot budgets, especially time to reach an energy
-threshold. A complete scan of the same angle grid makes sieve order
-irrelevant to the final minimum; ordering matters mainly with
-early stopping or limited budgets. Do not claim a quantum speedup.
+The dependency-free exact classical p=1 QAOA statevector simulation
+uses recursive sieve ordering to scan circuit angles gamma/beta.
+The benchmark compares six optimization methods on five tiny
+MaxCut graphs x three starts, with 420 recorded method runs.
+Recursive and original sieve target-hit rates tie in aggregate.
+The simple derivative-free pattern-search baseline performs better
+in some settings; this is not a quantum hardware or speedup claim.
 
-For now, first summarize the repository's current state concisely,
-and let me choose what to do next. Do not automatically start a
-benchmark or rewrite the algorithms.
-```
+Potential next experiment: use recursive dyadic samples as
+multistart seeds for pattern search; compare against random,
+original-dyadic, Halton and Sobol multistarts at matched energy
+evaluation budgets. Related low-discrepancy + pattern-search
+literature is cataloged in docs/neighbors.md. This hybrid has
+NOT been implemented or tested. Do not start building it or revise
+the published manuscript without my request.
+
+First give a concise state summary, then let me choose next steps.
+~~~
 
 ## Source map
 
 | File | Role |
 | --- | --- |
-| [`AGENTS.md`](../AGENTS.md) | Conventions: flat `src/`, minimal Lean, GitHub Markdown math fences |
-| [`README.md`](../README.md) | Project overview, example invocation |
-| [`docs/journal.md`](journal.md) | Chronological research record, proof status, QAOA simulation |
-| [`docs/neighbors.md`](neighbors.md) | IQM/PyTorch neighbors, QMC sequences, Grover/QAOA/VQA literature |
+| [`AGENTS.md`](../AGENTS.md) | Conventions: flat `src/`, minimal Lean, GitHub Markdown math |
+| [`README.md`](../README.md) | Project overview, Zenodo preprint, verification |
+| [`docs/journal.md`](journal.md) | Chronological record, including benchmark and publication update |
+| [`docs/qaoa_benchmark.md`](qaoa_benchmark.md) | Experiment protocol, six methods, limitations and results |
+| [`docs/neighbors.md`](neighbors.md) | IQM/PyTorch neighbors, QMC sequences, Grover/VQA and pattern-search prior art |
+| [`docs/working_model.md`](working_model.md) | Technical intuition and derivations |
 | [`src/dyadic_sieve.py`](../src/dyadic_sieve.py) | Original ascending-within-level sieve |
-| [`src/recursive_dyadic_sieve.py`](../src/recursive_dyadic_sieve.py) | Recursive bit-reversal (finite base-2 van der Corput) sieve |
-| [`src/cluster_expectation.py`](../src/cluster_expectation.py) | Exact finite cluster-first-hit calculations |
-| [`src/sieve_qaoa.py`](../src/sieve_qaoa.py) | One-layer QAOA, exact statevector simulator, angle optimizer |
-| [`examples/sieve_qaoa_maxcut.py`](../examples/sieve_qaoa_maxcut.py) | Four-vertex MaxCut demonstration |
-| [`tests/test_sieve_qaoa.py`](../tests/test_sieve_qaoa.py) | QAOA tests, including early stopping and budget |
-| [`lean/FirstHitSum.lean`](../lean/FirstHitSum.lean) | Final end-to-end integer first-hit sum theorem, original sieve only |
+| [`src/recursive_dyadic_sieve.py`](../src/recursive_dyadic_sieve.py) | Recursive bit-reversal (finite base-2 van der Corput with zero last) sieve |
+| [`src/cluster_expectation.py`](../src/cluster_expectation.py) | Finite cluster first-hit calculations |
+| [`lean/FirstHitSum.lean`](../lean/FirstHitSum.lean) | Machine-checked original-sieve **integer sum** |
+| [`src/sieve_qaoa.py`](../src/sieve_qaoa.py) | p=1 QAOA exact statevector simulator and sieve angle optimizer |
+| [`src/qaoa_benchmark.py`](../src/qaoa_benchmark.py) | Six benchmark methods; exact evaluation accounting |
+| [`examples/sieve_qaoa_maxcut.py`](../examples/sieve_qaoa_maxcut.py) | Four-cycle MaxCut sanity check |
+| [`examples/benchmark_qaoa_optimizers.py`](../examples/benchmark_qaoa_optimizers.py) | Benchmark runner |
+| [`tests/test_qaoa_benchmark.py`](../tests/test_qaoa_benchmark.py) | Eight benchmark-specific tests, included in 29-test suite |
+| [`paper/dyadic_qaoa_note.pdf`](../paper/dyadic_qaoa_note.pdf) | Five-page research note by Pauli Rikula |
+| [`paper/source/dyadic_qaoa_note.tex`](../paper/source/dyadic_qaoa_note.tex) | Editable paper and final AI declaration |
+| [`paper/results/qaoa_benchmark_raw.csv`](../paper/results/qaoa_benchmark_raw.csv) | 420 experimental records |
+| [`paper/results/qaoa_benchmark_summary.csv`](../paper/results/qaoa_benchmark_summary.csv) | Aggregate results |
+| [`paper/source/plot_results.py`](../paper/source/plot_results.py) | Regenerates figures from results |
+| [`paper/source/verify_math.py`](../paper/source/verify_math.py) | Finite enumerations/energy checks (not Lean proofs) |
+| [`paper/README.md`](../paper/README.md) | Reproduction and LaTeX build instructions |
 
-## What is established
+## What is established, with limits
 
-**Two sieve orders.** For four bits:
+**Dyadic sequences.** Both orderings visit each of the `N=2**n` keys exactly once and have identical complete dyadic refinement *sets* but different *within-level ordering*. For four bits:
 
 - Original: `8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0`.
 - Recursive: `8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15, 0`.
 
-Both have the same complete dyadic refinement levels. Their within-level ordering differs, which can affect how quickly they find *non-solid* hit sets.
+**Formalization.** For `N=2**n`, `m=2**r`, `2 <= m <= N`, and a contiguous block of `m` successful integer-ordered keys whose start is uniform among the `N-m+1` possible starts:
 
-**Proved mathematical result.** For `N = 2^n`, `m = 2^r`, `2 <= m <= N`, and a solid cluster of `m` successful consecutive integer-ordered keys whose start is uniform over all `N-m+1` possibilities:
-
-```math
+~~~math
 \mathbb{E}[T] = \frac{N(N-m+2)}{2m(N-m+1)}.
-```
+~~~
 
-The exact **integer sum identity** for the original sieve is machine-checked in Lean; the expectation is obtained mathematically by dividing by the number of possible starts. The user reported `lake -d lean build` **successful (19 jobs)** on Lean 4.36.0. The same expectation for the recursive variant has been checked in Python, **not separately proved in Lean**. The singleton `m=1` and arbitrary non-power-of-two lengths are not included in the final formal theorem.
+The Lean theorem formalizes the **integer first-hit sum identity for the original sieve**. Dividing by the number of starts yields the displayed expectation as a mathematical corollary. Equality for the recursive sieve on this cluster model was numerically checked, **not separately formalized in Lean**. The theorem does not cover arbitrary target geometry or a quantum algorithm.
 
-**QAOA draft.** `src/sieve_qaoa.py` creates the state
+**QAOA simulator.** `src/sieve_qaoa.py` implements the exact noiseless classical statevector
 
-```math
-|\psi(\gamma,\beta)\rangle
-= e^{-i\beta\sum_j X_j} e^{-i\gamma H_C}|+\rangle^{\otimes n}
-```
+~~~math
+|\psi(\gamma,\beta)\rangle =
+e^{-i\beta\sum_j X_j}e^{-i\gamma H_C}|+\rangle^{\otimes n}.
+~~~
 
-for a binary-vector cost `f(x)`. The optimizer uses `recursive_dyadic_sieve.keys(angle_bits)` to choose `2*pi*k/2**angle_bits` candidates for `gamma`, then `beta`, repeating for `sweeps`. Options include `target_energy` and `max_evaluations`, which counts exact statevector energy evaluations. This is a **classical ideal simulation** whose dense cost table and statevector scale as `2**n`.
+The optimizer uses sieve-selected angles on a finite grid, alternately scanning gamma and beta. It supports `target_energy` and `max_evaluations`. Every counted evaluation is an **exact classical statevector objective evaluation**, not a physical measurement shot. Cost/statevector arrays scale as `2**n`. On the four-cycle MaxCut example, expected negative-cut energy improves from `-1` to `-3` after 65 evaluations, with total probability around 53.125% on the two maximum-cut bitstrings.
 
-In the documented four-vertex cycle MaxCut example (`angle_bits=4`, `sweeps=2`), the previous session reported expected energy improving from `-1.0` to `-3.0` after **65 exact statevector evaluations**; the optimal cut bitstrings `0101` and `1010` together have about **53% output probability**. Seven dedicated QAOA tests were reported passing in the previous session; the repository owner has not yet provided independent test/build output for this newest Python draft.
+**Optimizer benchmark.** See [full design and limitations](qaoa_benchmark.md). Five small MaxCut graphs, three initial angle pairs, 16 grid angles per coordinate, and 65 counted evaluations *including initial evaluation*, with 12 seeds for each randomized method. Total: **420 rows**; deterministic methods have 15 runs each, randomized methods 180 each. Methods: recursive sieve, original sieve, ascending grid, shuffled coordinate scan, random joint pairs, and simple pattern-search-style polling.
 
-## When resuming
+| Method | Target hit by 10 | By 20 | By 65 |
+| --- | ---: | ---: | ---: |
+| Recursive sieve | 60.0% | 66.7% | 86.7% |
+| Original sieve | 60.0% | 66.7% | 86.7% |
+| Random joint pairs | 52.8% | 71.1% | 95.6% |
+| Pattern-search polling | 40.0% | 100% | 100% |
 
-From the repository root:
+The grid reference for retrospective thresholds is an **offline exhaustive 16x16 reference (256 extra objective evaluations per graph) not charged to individual method budgets**. Results from a few noiseless small problems do not show universal superiority or quantum speedup. Recursive and original sieve curves **coincide exactly in the aggregate plot**; the paper intentionally renders their coincident traces visibly.
 
-```bash
+**Literature and possible next experiment.** The pattern-search baseline is classical local polling. Halton/sobol-style low-discrepancy initialization plus conventional optimization is established prior art; [neighbors.md](neighbors.md) now cites a concrete Halton + global pattern search application, classical multistart work, and related direct-search papers. A *recursive-dyadic multistart pattern-search* hybrid is still **only a research proposal**. A meaningful study must choose a genuine multidimensional starting-point schedule, count all global and local objective evaluations fairly, compare alternative starts under the same local search, and account for periodic angle wrapping and repeated evaluations. Do not claim novelty or a performance advantage without literature review and evidence.
+
+## Verification and how to resume
+
+**Author-reported, successful (20 November 2026):** `lake -d lean build` completed with **19 jobs**; `python -m unittest discover -s tests -v` passed **29 tests** in **0.409 seconds**. Preparation-environment checks also reproduced the 420-row CSV and independently checked finite first-hit calculations and analytic four-cycle QAOA energy, but do not replace formalization or full hardware tests.
+
+From repo root (Python 3.11+; core simulator/benchmark needs no third-party runtime dependency):
+
+~~~bash
 git pull
-python examples/sieve_qaoa_maxcut.py
 python -m unittest discover -s tests -v
 lake -d lean build
-```
+python examples/sieve_qaoa_maxcut.py
+python examples/benchmark_qaoa_optimizers.py --csv paper/results/reproduced.csv
+python paper/source/verify_math.py
+~~~
 
-Python requires **3.11+**, with no third-party runtime dependencies for the current draft. The Lean build is optional when only changing Python. Follow the repository's `AGENTS.md` conventions.
+For the figure and PDF build, see [paper/README.md](../paper/README.md); plotting needs matplotlib and the paper needs LaTeX. Do not overwrite the tracked PDF without intentionally updating its source and rerunning the build.
 
-A fair subsequent comparison should measure **time-to-target**, best energy at matched **evaluation budgets**, and probability of measuring a satisfactory binary solution. Compare ascending sieve, recursive sieve, ordinary grid, random and (if dependencies are acceptable) Sobol/Halton or an optimizer such as Rotosolve. Keep noise and actual shot costs distinct from ideal statevector evaluations; make no inference of universal VQA or quantum advantage from the contiguous-cluster theorem. QAOA searches circuit angles while its output distribution samples binary solutions; Grover searches marked states with a coherent oracle and is not the same operation.
+**Research scope:** Keep circuit-angle optimization separate from Grover-like marked-bitstring search; distinguish the original Lean theorem from the recursive variant's numerical checks; distinguish offline grid-reference target construction from realistic online stopping; distinguish ideal statevector energy evaluations from circuit counts/shots. Await explicit instructions before implementing a hybrid, adding Lean proofs, changing the published manuscript, or modifying the repository layout.
