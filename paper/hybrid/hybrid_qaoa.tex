@@ -5,7 +5,7 @@
 \definecolor{ink}{HTML}{203447}
 \definecolor{teal}{HTML}{006B61}
 \hypersetup{colorlinks=true,linkcolor=teal,urlcolor=teal,citecolor=teal,
- pdftitle={When should a sieve hand off to pattern search?},
+ pdftitle={Initializing QAOA pattern search on nonclustered target keys},
  pdfauthor={Variational Quantum Algorithms project}}
 \input{glyphtounicode}\pdfgentounicode=1
 \input{results/paper_tables.tex}
@@ -25,15 +25,15 @@
 \thispagestyle{plain}
 {\sffamily\small\color{teal}\bfseries VARIATIONAL QUANTUM ALGORITHMS PROJECT}\par
 \vspace{3pt}
-{\sffamily\bfseries\fontsize{26}{29}\selectfont\color{ink}When should a sieve hand off\\to pattern search?\par}
-{\large A fixed-budget experiment on one-layer QAOA for MaxCut\par}
+{\sffamily\bfseries\fontsize{24}{27}\selectfont\color{ink}\raggedright Initializing QAOA pattern search on nonclustered target keys\par}
+{\large A recursive sieve, a Halton start, and the cost of the handoff\par}
 {\small Research draft prepared for Pauli Rikula \hfill 21 November 2026\par}
 \vspace{3pt}\noindent{\color{teal}\rule{\linewidth}{1pt}}
 \subt{Abstract}
-How much of an angle-optimization budget should go to global sampling before local polling begins? In an archived benchmark, pattern search overtook two coordinate sieves on call 14. We tested a 13-call pilot, alternative splits, seven starting schedules and two online switching rules. Across two new sets of 24 graphs each, Halton initialization followed by pattern search reached a retrospective energy target in 70/72 and 66/72 cases. A 33-call Halton pilot reached every target before its local phase, as did uninterrupted Halton sampling. In the second set the shorter pilot led at call 20, while the longer pilot attained better eventual coverage. Both adaptive Halton rules lost coverage relative to the fixed 13-call pilot. A simple comparison of expected local work saved against the cost of another sample explains what an online rule would need to estimate.
+Does a recursive sieve give pattern search a better start when valid keys cluster? This paper establishes the nonclustered baseline using the quantum approximate optimization algorithm (QAOA) for MaxCut. Every valid key was isolated in the sieve's integer order in all 72 confirmation graph/start cases. \textbf{By call 65, a recursive start hit 47 of 72 targets, a Halton start hit 66, and immediate pattern search hit 49.} Both hybrids used 13 starting calls and the same local search. In the companion experiment, putting those same valid energies into one solid block reversed the ranking, with 79.0\% hits for the recursive hybrid and 73.8\% for Halton \cite{clusterstudy}. This comparison uses a controlled reindexing of the energy table.
 
-\sect{1}{The crossover in the original experiment}
-The original study compared optimizers for the two circuit angles of the quantum approximate optimization algorithm (QAOA) on five MaxCut graphs and three starts per graph \cite{rikula,farhi}. We reconstructed the first-hit curves from its per-run records, using integer evaluation counts. Pattern search led early, the sieves then pulled ahead, and pattern search passed both again on call 14. At 13 calls the hit counts were 10 for the original sieve, 9 for the recursive sieve and 8 for pattern search. At 14 they were 10, 9 and 13. We take the later overtake as the proposed handoff: charge 13 calls to the pilot and make call 14 the first local poll.
+\sect{1}{Why spend 13 calls on initialization?}
+The original study compared two sieves and pattern search on five MaxCut graphs with three starts each \cite{rikula,farhi}. On evaluation 13, the original sieve, recursive sieve and pattern search had reached 10, 9 and 8 targets. On evaluation 14 their counts were 10, 9 and 13. This crossing motivated our split. We spend 13 calls sampling and start local polling from the best sampled point on call 14. We also compare 33-call starts and adaptive switches. A cluster means consecutive valid keys in the sieve's integer encoding. The fact that two pairs of angles are physically close is a different condition.
 
 \begin{center}\includegraphics[width=.92\linewidth]{figures/crossover.pdf}\end{center}
 \figcaption{1}{Historical cumulative target hits at each paid evaluation. The shaded interval marks the change from call 13 to 14. These curves start each algorithm from the common initial point. A hybrid instead starts its local phase at the best sampled point, which changes the comparison.}
@@ -126,8 +126,8 @@ For both Morton-decoded dyadic orders, the first 16 points including the common 
 \subt{Changing the budget or grid}
 On cohort A at $B=33$, the 20\% pilot rounds to seven calls. Halton then hit the target in 35/72 cases, versus 50/72 for immediate pattern search and 72/72 for Halton alone. On the finer $32\times32$ grid with $B=65$, the 13-call Halton pilot hit 18/18 on the six-graph subset, compared with 13/18 for immediate polling. The finer grid sets its own exhaustive reference. These checks show why a fixed percentage needs validation at the intended budget and resolution.
 
-\subt{Implications}
-For an early deadline on the tested 65-call problem, the 13-call Halton handoff is a practical choice. For coverage across the whole budget, the 33-call Halton prefix reached every target in both new cohorts. Uninterrupted Halton reached the same targets at the same first-hit times. A four-call stall or a single learned progress bit did not justify an adaptive Halton handoff here. Additional graph families, new initial angles, deeper circuits, noisy objectives and a symmetry-reduced pilot domain would test the limits of this conclusion. The study uses one selected seed and one local continuation per run. It measures classical exact-energy queries and provides no hardware speedup estimate.
+\subt{Choosing a start for the observed geometry}
+On the native confirmation grids, every valid key was isolated and the short recursive prefix sampled symmetry-equivalent energies. A 13-call Halton start gave better early coverage here. A 33-call Halton start hit every target in both cohorts before its local phase. The four-call stall and the learned checkpoint lost coverage against fixed 13. The companion's one-block reindexing of the same confirmation energies favored the recursive start at the same 13-call handoff \cite{clusterstudy}. The choice of initializer therefore depends on the order of valid keys. These results measure classical energy queries on noiseless one-layer circuits.
 
 \subt{Reproducibility}
 {\footnotesize The companion directory contains the optimizer entry points, graph edge lists, all policy records, fitted rules, paired intervals and figure generation instructions. The original experiment is pinned to repository commit \texttt{0ab4abc}.\par}
@@ -140,6 +140,7 @@ For an early deadline on the tested 65-call problem, the 13-call Halton handoff 
 \bibitem{sobol} I. M. Sobol'. On the distribution of points in a cube and the approximate evaluation of integrals. 1967. \href{https://doi.org/10.1016/0041-5553(67)90144-9}{USSR Comput. Math. Math. Phys. 7, 86--112}.
 \bibitem{torczon} V. Torczon. On the convergence of pattern search algorithms. 1997. \href{https://doi.org/10.1137/S1052623493250780}{SIAM J. Optim. 7, 1--25}.
 \bibitem{wolniak} M. Wolniak et al. Uncertainty propagation via sample-based deterministic model updating for structural damage identification. 2025. \href{https://doi.org/10.1177/14759217251387535}{Structural Health Monitoring}.
+\bibitem{clusterstudy} Variational Quantum Algorithms project. \emph{Clustered versus isolated target keys in QAOA pattern search}. 2026. \href{https://github.com/kummahiih/variational-quantum-algorithms/blob/main/paper/clusters/cluster_assumption.pdf}{Companion matched experiment}.
 \end{thebibliography}
 \endgroup
 {\footnotesize\textbf{Declaration of generative AI assistance.} OpenAI Codex implemented the experiment, ran the simulations, and drafted the analysis and manuscript at the project owner's request. This research draft awaits author review.\par}

@@ -1,6 +1,8 @@
-# When should a sieve hand off to pattern search?
+# Initializing QAOA pattern search on nonclustered target keys
 
 [Research draft (PDF)](hybrid_qaoa.pdf) · [Editable LaTeX](hybrid_qaoa.tex) · [Method-level results](results/summary.csv) · [Paired uncertainty intervals](results/paired.csv)
+
+All 72 native confirmation cases had isolated valid keys in the recursive sieve's integer order. Under a common 65-call budget, 13 sieve calls followed by pattern search hit 47/72 targets. Halton followed by the same pattern search hit 66/72, and immediate pattern search hit 49/72. Placing the same valid energies in a single block reversed the recursive-versus-Halton ranking. The [companion paper, page 1](../clusters/cluster_assumption.pdf) reports the matched comparison.
 
 The optimizer spends a configurable fraction of a finite energy-call budget sampling a periodic pair of QAOA angles. It runs one pattern search from the best sampled point. Each global or local objective query counts, including repeated polls. Local convergence can leave calls unused.
 

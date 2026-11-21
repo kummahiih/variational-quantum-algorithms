@@ -8,6 +8,17 @@ A lightweight study project exploring variational quantum algorithms (VQAs), wit
 
 The preprint is a research note, not a peer-reviewed journal article. The [paper PDF](paper/dyadic_qaoa_note.pdf), [editable LaTeX source](paper/source/dyadic_qaoa_note.tex), and [reproducibility materials](paper/README.md) are available in this repository. No quantum hardware performance or quantum speedup is claimed.
 
+## Does a recursive sieve help initialize QAOA pattern search?
+
+The two follow-up papers test this question on the same 24 MaxCut graphs and three starting points per graph. Both hybrids spend 13 evaluations on their chosen start and run the same local pattern search with up to 52 calls left. A valid key meets the energy threshold. A solid block consists of consecutive valid keys in the sieve's indexing.
+
+| Target placement | Recursive sieve + pattern | Halton + pattern | Immediate pattern |
+| --- | ---: | ---: | ---: |
+| Native QAOA grids, all valid keys isolated (72 cases) | 65.3% | 91.7% | 68.1% |
+| Same energies, one uniformly placed solid block (32 placements per case) | 79.0% | 73.8% | 48.3% |
+
+The figures are target-hit rates by 65 evaluations. The planted comparison reindexes exact simulated energies and preserves the starting energy, target count and threshold. The [nonclustered baseline paper](paper/hybrid/hybrid_qaoa.pdf) describes the optimizer and the switch timing. The [matched comparison paper](paper/clusters/cluster_assumption.pdf) shows the starter comparison on page 1 and the handoff counts for variable-size blocks on page 6. See the [optimizer](src/hybrid_qaoa.py) and [reproducible simulation](paper/clusters/README.md).
+
 ## Layout
 
 - `docs/` — notes and mathematical background
@@ -83,13 +94,3 @@ python examples/benchmark_qaoa_optimizers.py
 python -m unittest discover -s tests -v
 lake -d lean build
 ```
-
-## Hybrid angle optimizer and follow-up paper
-
-The [hybrid optimizer](src/hybrid_qaoa.py) spends a configurable share of its energy budget on angle sampling and hands the best point to pattern search. It supports seven starting schedules, fixed splits, patience and a history-based checkpoint. The historical first-hit curves motivated a 13-call pilot out of 65. On a fresh 24-graph confirmation set, fixed Halton-13 reached 66/72 targets, fixed Halton-33 reached 72/72, and immediate polling reached 49/72. The shorter Halton pilot reached more targets by call 20. All first hits for Halton-33 occurred during the pilot.
-
-Read the [follow-up research paper](paper/hybrid/hybrid_qaoa.pdf) or [use the optimizer and reproduce the comparison](paper/hybrid/README.md). This experiment uses one local continuation from the best pilot point. Multiple independent local restarts remain a separate research question.
-
-## Search with fixed and variable-size valid clusters
-
-The [cluster simulation and paper](paper/clusters/README.md) compare a single solid interval, multiple unequal blocks, guaranteed isolation, and uniformly selected subsets under explicit placement laws. The [variable-size results](paper/clusters/results/variable_summary.csv) separate binary hit/miss feedback from informative distance feedback. On 256 keys with a uniformly selected total of 8–32 and two to five randomly composed unequal blocks, the recursive sieve hit 599/600 targets by call 65. Switching after 13 hit 478/600 with binary feedback and 600/600 with distance feedback. The paper derives deadlines from the longest guaranteed block and checks matched reindexings of the earlier MaxCut energies.

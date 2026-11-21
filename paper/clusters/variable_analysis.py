@@ -79,6 +79,8 @@ def build(out, figs, save, axis_style):
         out/"variable_width_priors.csv",index=False,float_format="%.9f")
     variable_intervals(raw,out)
 
+    hybrid = rows[(rows["bits"] == 4) & (rows["method"] == "recursive13")]
+    first_hits = hybrid.groupby(["model", "feedback"])[["hit13", "hit65"]].sum()
     with (out/"variable_tables.tex").open("w",encoding="utf-8") as stream:
         stream.write("\\newcommand{\\VariableRows}{%\n")
         for m in VARIABLE_MODELS:
@@ -95,6 +97,16 @@ def build(out, figs, save, axis_style):
                     sub.loc["recursive"].hit65,sub.loc["recursive13"].hit65]
             stream.write(f"{LABEL[m]} & {g.longest_key_run:.1f} & "+
                          " & ".join(f"{100*v:.1f}" for v in values)+r" \\"+"\n")
+        stream.write("}\n\\newcommand{\\HybridStageRows}{%\n")
+        for model in ("single", "balanced", "unequal", "dominant", "isolated"):
+            binary = first_hits.loc[model, "membership"]
+            distance = first_hits.loc[model, "distance"]
+            prefix = binary.hit13
+            if prefix != distance.hit13:
+                raise ValueError(f"Feedback changed the fixed sieve prefix for {model}")
+            counts = (prefix, binary.hit65 - prefix, distance.hit65 - prefix,
+                      binary.hit65, distance.hit65)
+            stream.write(" & ".join([LABEL[model], *map(str, counts)]) + r" \\" + "\n")
         stream.write("}\n")
 
     figs.mkdir(parents=True,exist_ok=True)
