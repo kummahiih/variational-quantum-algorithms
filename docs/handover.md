@@ -6,6 +6,8 @@
 **Preprint:** [Zenodo record 24382960](https://zenodo.org/records/24382960) (record URL supplied by Pauli Rikula)  
 **State:** The original preprint and formal result are followed by a [separate hybrid optimizer study](../paper/hybrid/README.md). The new implementation combines seven pilot schedules with one local pattern search from the best sampled point. Fixed, patience and learned handoffs are benchmarked. Multiple local restarts remain a distinct proposal. The [target-geometry follow-up](../paper/clusters/README.md) tests the actual solid-run assumption, multiple variable-size blocks, isolated and unrestricted random targets, and matched reindexings of the earlier QAOA grids. Sections 5–6 of the new paper cover unequal block sizes.
 
+The central comparison holds pattern search and the 65-call budget fixed. With a 13-call start, recursive versus Halton hit 65.3% versus 91.7% on native isolated keys, and 79.0% versus 73.8% on the same MaxCut energies reindexed into one uniformly placed block. The two follow-up papers lead with this distinction. See Table 1 of the [matched comparison](../paper/clusters/cluster_assumption.pdf).
+
 ## Copy-ready prompt for the next session
 
 ~~~text

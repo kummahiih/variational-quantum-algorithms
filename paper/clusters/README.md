@@ -1,6 +1,8 @@
-# When dyadic sieves find valid clusters
+# Clustered versus isolated target keys in QAOA pattern search
 
 [Research paper (PDF)](cluster_assumption.pdf) · [Editable LaTeX](cluster_assumption.tex) · [Simulation driver](../../examples/benchmark_cluster_assumption.py)
+
+Does the opening sieve help when valid keys cluster? Table 1 on **page 1** keeps the 13-call start and the subsequent pattern search fixed and varies the start order. On native QAOA grids with isolated valid keys, the recursive-start hybrid hit **65.3%** versus **91.7%** for Halton. When the same valid energies occupied one planted block, the rates were **79.0%** versus **73.8%**. Immediate pattern search hit 68.1% and 48.3% respectively. The [paired graph analysis](results/paired.csv) measures the change in starter advantage. Table 7 on page 6 gives first hits before and after the handoff on the separate variable-block simulation.
 
 Sections 5–6 cover variable-size solid blocks. The experiment varies the width of a single block across instances and allocates changing totals among several unequal blocks within an instance. It compares nearly equal lengths, random unequal lengths, and one dominant block with the same total, block count, and empty gaps.
 

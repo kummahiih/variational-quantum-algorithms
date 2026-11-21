@@ -102,6 +102,14 @@ def comparisons(syn, arch, out):
             (("solid","recursive_bound"),("solid","recursive13")),
             (("solid","recursive_bound"),("solid","recursive_patience"))):
         add("matched_qaoa",a,b,g,["layout","method"],["stratum"])
+    for control in ("halton13", "pattern"):
+        for layout in ("native", "solid"):
+            add("matched_qaoa", (layout, "recursive13"), (layout, control),
+                g, ["layout", "method"], ["stratum"])
+        # Compare the change in the starter's advantage within each graph.
+        gap = g.xs("recursive13", level="method") - g.xs(control, level="method")
+        add(f"matched_qaoa_recursive13_minus_{control}_interaction",
+            ("solid",), ("native",), gap, ["layout"], ["stratum"])
     pd.DataFrame(rows,columns=["design","a","b","metric","a_minus_b","lo95","hi95","units"]
                  ).to_csv(out/"paired.csv",index=False,float_format="%.9f")
 
@@ -268,13 +276,8 @@ def law_comparison(exact, isolated, out):
     return table
 
 
-def tex_tables(exact,syn,arch,edge,laws,out):
+def tex_tables(exact,syn,arch,edge,out):
     blocks={}
-    labels={"uniform_block_start":"Uniform start of one solid block",
-            "uniform_subset":"Uniform 16-element subset",
-            "uniform_isolated":"Uniform 16-element subset with no neighbors"}
-    blocks["LawRows"]=[f"{labels[r.target_law]} & {r.dyadic_mean:.2f} & {r.ascending_mean:.2f}"
-                       for r in laws[laws.valid_count.eq(16)].itertuples()]
     rows=[]
     for q in (8,16,32):
         a=exact.query("size==256 and q==@q and order=='original_canonical'").iloc[0]
@@ -296,6 +299,14 @@ def tex_tables(exact,syn,arch,edge,laws,out):
         v=[arch.loc[layout,method] for layout in ("native","shuffled","solid")]
         rows.append(METHOD_LABELS[method]+" & "+" & ".join(f"{r.loss:.2f} & {100*r.hit65:.1f}" for r in v))
     blocks["ArchiveRows"]=rows
+    rows = []
+    for layout,label in (("native","Native, isolated"), ("solid","Planted solid block")):
+        sieve = arch.loc[layout, "recursive13"]
+        halton = arch.loc[layout, "halton13"]
+        direct = arch.loc[layout, "pattern"]
+        rates = (sieve.hit13, halton.hit13, sieve.hit65, halton.hit65, direct.hit65)
+        rows.append(label + " & " + " & ".join(f"{100*r:.1f}" for r in rates))
+    blocks["InitializerRows"] = rows
     rows=[]
     for m in (8,16,32):
         v=[edge.loc[m,enc] for enc in ("physical","odd_stride","shuffled")]
@@ -345,8 +356,8 @@ def main():
     mixture.to_csv(out/"mixture.csv",index=False,float_format="%.9f")
     mixture_threshold(arc_graph,out)
     exact=pd.read_csv(out/"exact.csv")
-    laws=law_comparison(exact,pd.read_csv(out/"isolated_exact.csv"),out)
-    tex_tables(exact,syn_table,arc_table,edge,laws,out)
+    law_comparison(exact,pd.read_csv(out/"isolated_exact.csv"),out)
+    tex_tables(exact,syn_table,arc_table,edge,out)
     make_figures(syn_table,arc_table,pd.read_csv(out/"exact_histograms.csv"),mixture,args.figures)
     variable_analysis.build(out,args.figures,save,axis_style)
 
