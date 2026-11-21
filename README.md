@@ -4,7 +4,7 @@ A lightweight study project exploring variational quantum algorithms (VQAs), wit
 
 ## Preprint
 
-**Pauli Rikula**, *Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark*. [Zenodo record 24382960](https://zenodo.org/records/24382960) (author-provided publication link).
+**Pauli Rikula**, *Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark*. [Zenodo record 24382960](https://zenodo.org/records/24382960) · [DOI 10.5281/zenodo.24382960](https://doi.org/10.5281/zenodo.24382960).
 
 The preprint is a research note, not a peer-reviewed journal article. The [paper PDF](paper/dyadic_qaoa_note.pdf), [editable LaTeX source](paper/source/dyadic_qaoa_note.tex), and [reproducibility materials](paper/README.md) are available in this repository. No quantum hardware performance or quantum speedup is claimed.
 
@@ -89,3 +89,7 @@ lake -d lean build
 The [hybrid optimizer](src/hybrid_qaoa.py) spends a configurable share of its energy budget on angle sampling and hands the best point to pattern search. It supports seven starting schedules, fixed splits, patience and a history-based checkpoint. The historical first-hit curves motivated a 13-call pilot out of 65. On a fresh 24-graph confirmation set, fixed Halton-13 reached 66/72 targets, fixed Halton-33 reached 72/72, and immediate polling reached 49/72. The shorter Halton pilot reached more targets by call 20. All first hits for Halton-33 occurred during the pilot.
 
 Read the [follow-up research paper](paper/hybrid/hybrid_qaoa.pdf) or [use the optimizer and reproduce the comparison](paper/hybrid/README.md). This experiment uses one local continuation from the best pilot point. Multiple independent local restarts remain a separate research question.
+
+## Search with fixed and variable-size valid clusters
+
+The [cluster simulation and paper](paper/clusters/README.md) compare a single solid interval, multiple unequal blocks, guaranteed isolation, and uniformly selected subsets under explicit placement laws. The [variable-size results](paper/clusters/results/variable_summary.csv) separate binary hit/miss feedback from informative distance feedback. On 256 keys with a uniformly selected total of 8–32 and two to five randomly composed unequal blocks, the recursive sieve hit 599/600 targets by call 65. Switching after 13 hit 478/600 with binary feedback and 600/600 with distance feedback. The paper derives deadlines from the longest guaranteed block and checks matched reindexings of the earlier MaxCut energies.

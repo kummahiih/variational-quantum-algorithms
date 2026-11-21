@@ -4,7 +4,7 @@
 **Last updated:** 2026-11-21
 
 **Preprint:** [Zenodo record 24382960](https://zenodo.org/records/24382960) (record URL supplied by Pauli Rikula)  
-**State:** The original preprint and formal result are followed by a [separate hybrid optimizer study](../paper/hybrid/README.md). The new implementation combines seven pilot schedules with one local pattern search from the best sampled point. Fixed, patience and learned handoffs are benchmarked. Multiple local restarts remain a distinct proposal.
+**State:** The original preprint and formal result are followed by a [separate hybrid optimizer study](../paper/hybrid/README.md). The new implementation combines seven pilot schedules with one local pattern search from the best sampled point. Fixed, patience and learned handoffs are benchmarked. Multiple local restarts remain a distinct proposal. The [target-geometry follow-up](../paper/clusters/README.md) tests the actual solid-run assumption, multiple variable-size blocks, isolated and unrestricted random targets, and matched reindexings of the earlier QAOA grids. Sections 5–6 of the new paper cover unequal block sizes.
 
 ## Copy-ready prompt for the next session
 
@@ -51,6 +51,16 @@ Halton hit all targets before any local refinement at call 34.
 Adaptive patience and the learned checkpoint underperformed Halton-13.
 The original published manuscript remains the record of the first study.
 Multiple local restarts would be a separate experiment.
+
+The third study is paper/clusters/cluster_assumption.pdf. Its generator
+is examples/benchmark_cluster_assumption.py; --variable-only runs the
+variable-width and unequal-block cases. Distinguish a uniformly placed
+block, a uniform isolated subset and an unrestricted uniform subset.
+State the placement law, the feedback model, and the budget with rates.
+For at most r runs with total m, at least one run has length ceil(m/r).
+The 65-call results for random unequal blocks on 256 keys were 599/600
+for pure recursive sampling and 478/600 for a 13-call hybrid with
+membership feedback. Exact distance feedback gave the hybrid 600/600.
 
 First give a concise state summary, then let me choose next steps.
 ~~~
