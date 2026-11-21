@@ -11,6 +11,7 @@ from random import Random
 from collections.abc import Sequence
 
 from dyadic_sieve import keys as original_keys
+from pattern_search import pattern_polls
 from recursive_dyadic_sieve import keys as recursive_keys
 from sieve_qaoa import maxcut_costs, qaoa_probabilities
 
@@ -119,20 +120,11 @@ def optimize_trace(
             if len(points) >= max_evaluations:
                 break
     elif method == "pattern":
-        # Simple deterministic derivative-free poll of +/-step along both axes.
-        # All tested points are on the grid for the default grid-aligned start.
-        step = pi / 2
-        while len(points) < max_evaluations and step >= grid_step - 1e-12:
-            incumbent = best_angles
-            before = best_energy
-            for coordinate, sign in ((0, 1), (0, -1), (1, 1), (1, -1)):
-                candidate = list(incumbent)
-                candidate[coordinate] += sign * step
-                evaluate(*candidate)
-                if len(points) >= max_evaluations:
-                    break
-            if best_energy >= before - 1e-12:
-                step /= 2
+        for gamma, beta in pattern_polls(lambda: (best_angles, best_energy),
+                                         angle_bits, grid_step):
+            evaluate(gamma, beta)
+            if len(points) >= max_evaluations:
+                break
     else:
         # Coordinate-wise scans. The non-scanned coordinate is held fixed
         # throughout each scan, exactly as in optimize_with_recursive_sieve.

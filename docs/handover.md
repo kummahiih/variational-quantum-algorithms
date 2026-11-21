@@ -1,9 +1,10 @@
 # Handover for the next conversation
 
 **Repository:** [kummahiih/variational-quantum-algorithms](https://github.com/kummahiih/variational-quantum-algorithms) (public)  
-**Last updated:** 2026-11-20  
+**Last updated:** 2026-11-21
+
 **Preprint:** [Zenodo record 24382960](https://zenodo.org/records/24382960) (record URL supplied by Pauli Rikula)  
-**State:** Two dyadic sampling orders, the original-sieve first-hit Lean proof, an exact-statevector one-layer QAOA simulator, six-method optimizer benchmark, and five-page preprint are checked in. **Recursive-sieve + pattern-search multistart is proposed but not implemented.** Await the owner's chosen next task.
+**State:** The original preprint and formal result are followed by a [separate hybrid optimizer study](../paper/hybrid/README.md). The new implementation combines seven pilot schedules with one local pattern search from the best sampled point. Fixed, patience and learned handoffs are benchmarked. Multiple local restarts remain a distinct proposal.
 
 ## Copy-ready prompt for the next session
 
@@ -42,13 +43,14 @@ Recursive and original sieve target-hit rates tie in aggregate.
 The simple derivative-free pattern-search baseline performs better
 in some settings; this is not a quantum hardware or speedup claim.
 
-Potential next experiment: use recursive dyadic samples as
-multistart seeds for pattern search; compare against random,
-original-dyadic, Halton and Sobol multistarts at matched energy
-evaluation budgets. Related low-discrepancy + pattern-search
-literature is cataloged in docs/neighbors.md. This hybrid has
-NOT been implemented or tested. Do not start building it or revise
-the published manuscript without my request.
+Read paper/hybrid/README.md and the new research draft for the
+second study. Its source is src/hybrid_qaoa.py. On fresh cohort B,
+fixed Halton pilots of 13 and 33 calls hit 66/72 and 72/72 targets.
+The 13-call pilot led at call 20. The 33-call pilot and uninterrupted
+Halton hit all targets before any local refinement at call 34.
+Adaptive patience and the learned checkpoint underperformed Halton-13.
+The original published manuscript remains the record of the first study.
+Multiple local restarts would be a separate experiment.
 
 First give a concise state summary, then let me choose next steps.
 ~~~
@@ -134,4 +136,4 @@ python paper/source/verify_math.py
 
 For the figure and PDF build, see [paper/README.md](../paper/README.md); plotting needs matplotlib and the paper needs LaTeX. Do not overwrite the tracked PDF without intentionally updating its source and rerunning the build.
 
-**Research scope:** Keep circuit-angle optimization separate from Grover-like marked-bitstring search; distinguish the original Lean theorem from the recursive variant's numerical checks; distinguish offline grid-reference target construction from realistic online stopping; distinguish ideal statevector energy evaluations from circuit counts/shots. Await explicit instructions before implementing a hybrid, adding Lean proofs, changing the published manuscript, or modifying the repository layout.
+**Research scope:** Keep circuit-angle optimization separate from Grover-like marked-bitstring search; distinguish the original Lean theorem from the recursive variant's numerical checks; distinguish offline grid-reference target construction from realistic online stopping; distinguish ideal statevector energy evaluations from circuit counts/shots. The 21 November follow-up implements a single local continuation. See the [hybrid study and reproduction guide](../paper/hybrid/README.md) for its code, data and separate manuscript.

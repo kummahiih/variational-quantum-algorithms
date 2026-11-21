@@ -1,0 +1,15 @@
+starter,state,pairs,loss_switch8,loss_switch13,action
+original,stale,10,19.6,24.6,8
+original,improving,5,8.2,9.2,8
+recursive,stale,10,19.6,24.6,8
+recursive,improving,5,7.8,8.8,8
+halton,stale,11,25.454545454545453,10,13
+halton,improving,4,40.5,40.75,8
+sobol,stale,13,13.615384615384615,22.615384615384617,8
+sobol,improving,2,19,18.5,13
+random,stale,132,27.992424242424242,23.924242424242426,13
+random,improving,48,10.791666666666666,7.75,13
+original_coordinate,stale,7,32.857142857142854,33,8
+original_coordinate,improving,8,6,6,8
+recursive_coordinate,stale,7,32.857142857142854,34.57142857142857,8
+recursive_coordinate,improving,8,6.25,6.25,8
