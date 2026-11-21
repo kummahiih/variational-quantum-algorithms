@@ -1,0 +1,228 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=24mm,top=21mm,bottom=22mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,booktabs,graphicx,xcolor,hyperref}
+\definecolor{ink}{HTML}{243847}
+\definecolor{teal}{HTML}{087368}
+\hypersetup{colorlinks=true,linkcolor=teal,urlcolor=teal,citecolor=teal,
+ pdftitle={When dyadic sieves find valid clusters},pdfauthor={Variational Quantum Algorithms project}}
+\input{glyphtounicode}\pdfgentounicode=1
+\input{results/paper_tables.tex}
+\input{results/variable_tables.tex}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus .6pt minus .4pt}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.14}
+\newcommand{\sect}[2]{\noindent{\sffamily\bfseries\large\color{ink}#1\hspace{.6em}#2}\par\smallskip}
+\newcommand{\subt}[1]{\smallskip\noindent{\sffamily\bfseries\color{teal}#1}\par}
+\newcommand{\capfig}[2]{{\small\textbf{Figure #1.} #2\par}}
+\newcommand{\captab}[2]{{\small\textbf{Table #1.} #2\par}}
+\newcommand{\E}{\mathbb E}
+\pagestyle{myheadings}
+\markboth{Target geometry and dyadic search}{\footnotesize\textsf{TARGET GEOMETRY AND DYADIC SEARCH}}
+\begin{document}
+\thispagestyle{plain}
+{\sffamily\small\color{teal}\bfseries VARIATIONAL QUANTUM ALGORITHMS PROJECT}\par
+\vspace{3pt}
+{\sffamily\bfseries\fontsize{26}{30}\selectfont\color{ink}When dyadic sieves find valid clusters\par}
+{\large First-hit guarantees and matched MaxCut simulations under explicit placement models\par}
+{\small Research draft prepared for Pauli Rikula \hfill 21 November 2026\par}
+\vspace{2pt}{\color{teal}\rule{\linewidth}{1pt}}
+\subt{Abstract}
+Dyadic sampling covers a valid interval once its gaps are small enough. We compare explicit placement laws and vary both the total valid mass and its division among solid blocks. With 256 keys and 16 valid indices, the paid-zero sieve averaged 8.97 calls on a uniformly placed block, 15.12 on a uniform subset, and 15.17 under guaranteed isolation. With 8--32 valid keys spread over two to five random unequal runs, it hit 599 of 600 simulated targets by call 65. A switch to local polling after 13 calls hit 478 with membership feedback. Reindexing the same energies from 24 archived MaxCut graphs into one interval reduced mean capped time from 33.88 to 10.44. A two-qubit circuit supplies a physical interval and a fragmented encoding that preserves every early hit. The conclusions depend on the key mapping, the size and placement laws, and the information carried by each query.
+
+\sect{1}{Which assumption did the earlier benchmark test?}
+A key is \emph{valid} if its evaluated cost meets the stated threshold. A \emph{solid run of length $m$} is a set of $m$ consecutive integers in the sieve's own key order, with no wrap at the endpoints. The original proof concerns a single such run. In the preceding hybrid study, the 24 confirmation graphs and three starts gave 72 native target sets. All had valid points, yet the maximum run length was one in all 72. That study measured performance on naturally fragmented targets in a specific angle encoding \cite{original,hybrid}.
+
+\begin{center}\includegraphics[width=.94\linewidth]{figures/geometry.pdf}\end{center}
+\capfig{1}{One seeded draw from each synthetic law. Each row contains exactly 16 valid keys among 256. Teal ticks mark valid keys. Gray lines mark the 16 lattice keys covered by either dyadic sieve's first 16 paid calls. The angle rectangle is contiguous on the two-dimensional torus.}
+
+This study varies the geometry at fixed target count, varies the information returned by a miss, and reuses the actual MaxCut energy multisets. We report each comparison conditional on those choices.
+
+\captab{1}{Exact mean first-hit calls for two fixed search orders at $N=256,m=16$. Each row specifies a different distribution of valid keys. Both orders pay for key zero first.}
+\begin{center}\small\begin{tabular}{@{}lrr@{}}\toprule
+Target placement law & Dyadic sieve & Ascending keys\\\midrule
+\LawRows\bottomrule
+\end{tabular}\end{center}
+
+\newpage
+\sect{2}{The placement laws and the information in a miss}
+The synthetic search grid has side $M=16$ or 32 and $N=M^2$ keys. We interleave the bits of the two angle indices, assigning the top bit to the first angle, as in the preceding joint-sieve implementation. For each grid we set $q=N/m$ to 8, 16 or 32. Each of the six size/density settings has 192 independent placement draws per law. Every method sees the same mask within a draw.
+
+\captab{2}{Target laws conditional on $N$ and $m$. Valid runs are measured along the linear integer key order. Angle distance uses periodic boundaries on both axes.}
+{\small\begin{tabular}{@{}p{.19\linewidth}p{.74\linewidth}@{}}\toprule
+Law & How the valid points are drawn\\\midrule
+One solid run & Draw $a$ uniformly from $0,\ldots,N-m$ and mark $a,\ldots,a+m-1$.\\
+Four equal runs & Select uniformly among all configurations of four runs of length $m/4$, separated by at least one invalid key.\\
+Isolated & Select uniformly among all $m$-subsets with \emph{no} adjacent keys.\\
+Uniform subset & All $\binom Nm$ subsets have equal probability. Neighboring valid keys are allowed.\\
+Angle rectangle & Choose a uniform toroidal translation of a rectangle of area $m$ and aspect ratio one or two. Choose its orientation with equal probability.\\\bottomrule
+\end{tabular}}
+
+For $r$ equal runs of length $\ell=m/r$, draw distinct sorted anchors $u_0<\cdots<u_{r-1}$ uniformly from $0,\ldots,N-m$. Start run $i$ at $u_i+i\ell$. Subtracting $i\ell$ recovers the anchors, giving a bijection with legal placements. In particular, a uniform subset has probability $1-\binom{N-m+1}{m}/\binom Nm$ of at least one adjacent pair. At $N=256,m=16$ this is 63.1\%. Random placement and guaranteed isolation answer different questions.
+
+\subt{Exact consequences of assuming isolation}
+For a paid query prefix $Q_t$, let $C_{i,j}$ count legal ways to place $j$ nonadjacent valid keys in the first $i$ keys while avoiding $Q_t$. Taking or skipping key $i-1$ gives
+\[
+  C_{i,j}=C_{i-1,j}+{\bf1}_{i-1\notin Q_t}\,C_{i-2,j-1},
+  \qquad \Pr_{\rm isolated}(T>t)=C_{N,m}/\binom{N-m+1}{m}.
+\]
+The empty prefix has one empty placement. Summing the survival probabilities gives the exact mean for each fixed order. At $N=256,m=16$, the isolated law gives 15.17 calls for each dyadic order, 15.10 for Halton, and 14.24 for ascending keys. All three instead average 15.12 on a uniform unrestricted subset. The query order matters once the model excludes neighboring targets.
+
+\subt{What the optimizer observes}
+The \emph{membership} objective is zero at every valid point and one elsewhere. The \emph{distance} objective returns the shortest four-neighbor distance to any valid point on the angle torus. Both have exactly the same zero set. Distance supplies informative objective values outside the target and is deliberately favorable to local search. Computing that table is part of constructing the simulated environment. An optimizer receives only requested values.
+
+All 14 policies pay for the origin and have a 65-call ceiling. Pure original and recursive dyadic sieves use the same refinement levels. Halton and Sobol use the preceding study's two-dimensional schedules, and random search samples without replacement after the origin. Local pattern search polls in four directions and halves its step after an unsuccessful batch. The hybrids switch from the best paid pilot point after 13 or 33 calls, after four consecutive pilot calls without an improvement with cap 26, or at the model-implied deadline \cite{hybrid,torczon}. Local revisits count, and a converged local search may finish before the cap.
+
+We report $\Pr(T\leq t)$ and mean capped time $L=\E[\min(T,66)]$ for the first valid evaluation $T$. An early-converged miss also scores 66. Full uncensored times are reported separately where all permutations were followed. No unconditional average over the five placement laws is used.
+
+\newpage
+\sect{3}{A deterministic deadline and two different means}
+Let $d=2^{\lfloor\log_2\ell\rfloor}$, where $\ell\geq1$ is a credible lower bound on the length of at least one valid run. For $N$ a power of two, both deployed dyadic orders pay for key zero first. Their first $q_d=N/d$ keys are the set
+\[
+    \{0,d,2d,\ldots,N-d\}.
+\]
+The positive part of this prefix exhausts the dyadic levels whose entries are multiples of $d$. Any $d$ consecutive integer keys contain a multiple of $d$. Consequently $T\leq q_d$ \emph{for every placement} containing such a run. The argument requires no probability distribution. For four equal runs the guaranteed length is $m/4$. Substituting the total $m$ would assume a longer run than the model supplies.
+
+For one nonwrapping run of power-of-two length $m\geq2$ with \emph{uniform start}, put $A=N-m+1$ and $q=N/m$. The original sieve with zero last has the expectation below, obtained by averaging its Lean-proved integer sum \cite{original}. Moving zero to call 1 changes the rank of the zero-start case from $q$ to 1 and delays every other first hit by one. Thus
+\[
+   \E T_{\rm canonical}=\frac{N(N-m+2)}{2mA},\qquad
+   \E T_{\rm paid\ zero}=\E T_{\rm canonical}+1-\frac{q}{A}.
+\]
+Under the \emph{uniform $m$-subset law}, a fixed permutation independent of the labels instead has
+\[
+   \Pr(T>t)=\frac{\binom{N-t}{m}}{\binom Nm},\qquad
+   \E T=\frac{N+1}{m+1}.
+\]
+Both identities follow by counting positions of the $m$ marked keys. For the mean, the $m+1$ exchangeable gaps share $N-m$ misses. For a \emph{solid} target with uniform start and a randomized search order \emph{after} paying for zero, the comparable mean is $1+(1-1/A)N/(m+1)$.
+
+\captab{3}{Exact values for $N=256$. The three means use a uniformly placed block. The last column changes the target law to a uniform subset and gives the hit probability by $q$ for any fixed complete permutation.}
+\begin{center}\small\begin{tabular}{@{}rrrrrr@{}}\toprule
+$m$ & Deadline $q$ & Zero-last sieve & Paid-zero sieve & Paid-zero random & Uniform hit (\%)\\\midrule
+\ExactRows\bottomrule
+\end{tabular}\end{center}
+\begin{center}\includegraphics[width=.90\linewidth]{figures/exact_curves.pdf}\end{center}
+\capfig{2}{Exact cumulative probabilities for $N=256,m=16$. Enumeration over all 15,142 placements at $N=64,256,1024,4096$ and $q=8,16,32$ verified the two solid-block means and the deadline for both dyadic implementations. The existing Lean theorem covers the original integer sum.}
+
+\newpage
+\sect{4}{Controlled masks and the cost of switching early}
+On all 1,152 solid-block draws, both pure sieves hit by $q$, as the deterministic bound requires. Across the same six equally weighted size/density settings, the recursive sieve hit by $q$ on 66.0\% of uniform-subset draws and 64.8\% of guaranteed-isolated draws. The uniform-subset advantage over random order was 2.4 percentage points in this finite sample (paired 95\% interval $-1.6$ to $6.2$). The population difference is exactly zero under that law. On solid masks with membership feedback, waiting to $q$ instead of switching at 13 reduced mean capped time by 9.21 calls (8.31 to 10.12 fewer).
+
+\begin{center}\includegraphics[width=.96\linewidth]{figures/conditional_hits.pdf}\end{center}
+\capfig{3}{Hit by $q=N/m$ (\%) with membership feedback. Each column averages its own six prescribed settings equally. For the bound-based hybrid, $q$ is the pilot cap. Outside the solid-block column, using $m$ as a run-length assumption is deliberately tested under misspecification.}
+
+\captab{4}{Mean capped calls at $N=256,m=16$ across 192 draws per row. Pure nonadaptive orders have the same first hits with either feedback. M denotes membership and D denotes exact angle distance. Lower is better.}
+\begin{center}\small\begin{tabular}{@{}lrrrrrr@{}}\toprule
+ & Recursive & Random & \multicolumn{2}{c}{Pattern search} & \multicolumn{2}{c}{Recursive 13 + poll}\\
+Law & either & either & M & D & M & D\\\midrule
+\FeedbackRows\bottomrule
+\end{tabular}\end{center}
+
+On the same solid targets at $N=256,m=16$, direct pattern search fell from 41.59 capped calls with a flat miss to 7.84 with distance feedback. This was slightly faster on average than the sampled recursive sieve (8.78), while the sieve retained its 16-call guarantee. The 8.97 in Table 3 is the exact mean across all 241 possible block locations. The 8.78 in Table 4 is a mean across 192 sampled starts. Geometry, miss information, and the choice of a mean or a deadline all affect the comparison.
+
+An angle rectangle is another informative case. On the $16\times16$ grid with 16 valid cells, every sampled $4\times4$ rectangle met a dyadic prefix point by call 16. The prefix is a regular $4\times4$ angle lattice in this setting. Across the six tested size/density settings the corresponding rate is 83.8\%. The two-dimensional shape and its alignment with the query lattice matter independently of the longest one-dimensional run.
+
+\newpage
+\sect{5}{One unknown width, or several unequal solid blocks?}
+For one block we enumerate every legal nonwrapping start at every integer width $m=8,\ldots,32$ for $N=256$ and $m=32,\ldots,128$ for $N=1024$. These yield 5,925 and 91,665 width/start pairs. Most widths are not powers of two. If width is uniform first and start is uniform conditional on width, the exact mean first-hit counts for either paid-zero sieve are 9.09 and 9.06. Choosing a width/start pair uniformly instead weights shorter widths more heavily. The corresponding means rise to 9.19 and 9.15. At $N=256$, increasing the width from 15 to 16 halves the worst case from 32 to 16, while the mean changes from 9.99 to 8.97.
+
+\subt{A controlled generator for variable-size blocks}
+For each grid size, the total number of valid keys $m$ is uniform on the same integer range. Independently, the number of planted blocks $r$ is uniform on $\{2,3,4,5\}$. We use six draws in every $(m,r)$ stratum. Each matched draw has three allocations:
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item \textbf{Nearly equal.} Divide $m$ as evenly as possible. Randomly order the lengths that differ by one.
+\item \textbf{Random unequal.} Choose $r-1$ distinct cuts uniformly in $1,\ldots,m-1$. Their spacings form an ordered positive composition. Redraw the all-equal case. At least two blocks have different lengths.
+\item \textbf{One dominant.} One uniformly chosen block gets $m-r+1$ valid keys. Each of the others gets one.
+\end{itemize}
+The three allocations share identical empty gaps. Draw $r$ sorted anchors uniformly from $0,\ldots,N-m$, then set $a_i=u_i+\sum_{j<i}m_j$ for ordered lengths $m_j$. Adjacent blocks are separated by at least one invalid key. Each draw also has three count-matched controls: one variable-width interval, a uniform isolated set and a uniform unrestricted subset. All six layouts receive both objective signals. The primary variable-width grid has 600 draws per layout. The larger grid has 2,328. We report the two grids separately.
+
+\begin{center}\includegraphics[width=.92\linewidth]{figures/variable_sizes.pdf}\end{center}
+\capfig{4}{Above, exact first-hit mean and guaranteed deadline for every single-block width at $N=256$. Below, a recorded draw with $m=19,r=4$. The three allocations have identical gaps and total mass. Their largest blocks have lengths 5, 13 and 16. The corresponding longest-block deadlines are 64, 32 and 16 calls.}
+
+\newpage
+\sect{6}{What determines the handoff with unequal sizes?}
+Let $\ell_{\max}=\max_i m_i$. Knowing $m$ valid keys lie in at most $r$ runs guarantees $\ell_{\max}\geq\lceil m/r\rceil$. Write $D(x)=N/2^{\lfloor\log_2 x\rfloor}$. Thus $T\leq D(\ell_{\max})\leq D(\lceil m/r\rceil)$. Both are placement-wise guarantees. $D(m)$ treats the entire mass as one block and can fail. For example, in 16 keys the valid blocks $\{1,2,3\}$ and $\{5\}$ total four keys. Both paid sieves first query $0,8,4,12$ and miss. Query 5, key 2, hits. A model-informed implementation may use a lower bound supplied in advance. The longest-block comparison is an oracle reference when lengths are unknown.
+
+\captab{5}{Variable-size study, $N=256$, uniform $m=8,\ldots,32$, six draws per width and planned count. Mean capped calls across 600 cases per row. M denotes binary membership and D exact angle distance. Pure global methods have identical first hits for the two signals.}
+\begin{center}\small\begin{tabular}{@{}lrrrrrr@{}}\toprule
+ & Recursive & Halton & Random & \multicolumn{2}{c}{Pattern search} & Rec.\ 13 + poll\\
+Size allocation & either & either & either & M & D & M\\\midrule
+\VariableRows\bottomrule
+\end{tabular}\end{center}
+
+\captab{6}{Same $N=256$ cases with membership feedback. The $D(m)$ column gives observed pure-sieve success at that nominal deadline. Certified is the fraction whose computed guarantee fits 65 paid calls, using the actual run count or longest run. The last two columns are observed successes by 65. All rate columns are percentages.}
+\begin{center}\small\begin{tabular}{@{}lrrrrrr@{}}\toprule
+ & Mean & By & \multicolumn{2}{c}{Certified by 65} & \multicolumn{2}{c}{Observed by 65}\\
+Allocation & $\ell_{\max}$ & $D(m)$ & count & longest & recursive & rec.\ 13\\\midrule
+\BoundRows\bottomrule
+\end{tabular}\end{center}
+
+On the 600 unequal compositions, 536 hit by $D(m)$ and 599 by 65. The $r$-based guarantee fit the budget in 510 cases, the longest-run guarantee in 583. The remaining observed successes were possible because a worst-case bound can be conservative. Switching after 13 reduced the hits by 65 to 478 with binary feedback. With exact distance feedback it reached all 600, at a mean capped cost of 10.78. In the $N=1024$ unequal group the pure sieve hit all 2,328 by 65, while the same early handoff with membership feedback hit 79.6\%.
+
+Paired on the same total mass, count and empty gaps, making one block dominant saved 2.25 capped calls versus nearly equal blocks at $N=256$ (95\% bootstrap interval 1.51 to 3.02). Random unequal versus nearly equal saved 0.51 calls (interval $-0.20$ to 1.21). The corresponding savings at $N=1024$ were 3.73 and 1.27. These intervals resample the six paired draws within each fixed width/count stratum. They apply to the stated composition laws.
+
+\newpage
+\sect{7}{A physical interval in a two-qubit QAOA circuit}
+A one-edge MaxCut circuit provides a valid interval through its energy threshold. The depth-one QAOA state uses the negative cut Hamiltonian and the usual $X$ mixer \cite{farhi}. For a fixed mixer angle $\beta=\pi/8$, direct evaluation gives $E(\gamma)=-1/2+\sin(\gamma)/2$. Choose $N=256$, $c=a+(m-1)/2$ and the following angle and threshold:
+\[
+   \gamma_j=-\pi/2+2\pi(j-c)/N,\qquad
+   \tau_m=-\frac{1+\cos(\pi m/N)}{2}.
+\]
+The statevector yields $E(\gamma_j)=-[1+\cos(2\pi(j-c)/N)]/2$. For $0\leq a\leq N-m$ the integer indices with $E\leq\tau_m$ are exactly $a,\ldots,a+m-1$. We verified this against the repository's simulator for every placement at $m=8,16,32$. Translating a precomputed energy cycle for each $a$ is exact by periodicity.
+
+Use the same energies in three indexings. Physical keys take $j=k$. The odd-stride indexing takes $j=(1+N/2)k\bmod N$. This is a bijection, fixes each even key, and separates consecutive indices so far in physical angle that the chosen $m$ valid keys become isolated. A third indexing draws a uniform random permutation independently for each $(m,a)$. No energies or target counts change.
+
+\begin{center}\includegraphics[width=.94\linewidth]{figures/one_edge.pdf}\end{center}
+\capfig{5}{One physical interval at $a=68,m=16$. The orange dots indicate the same first valid query in both indexings. Although the lower valid set has 16 isolated keys, the early even-key queries are preserved.}
+\captab{7}{Uncensored recursive first-hit ranks over all equally weighted block starts. Shuffled values use one seeded permutation per placement. Max is empirical for the shuffled column.}
+\begin{center}\small\begin{tabular}{@{}rrrrrrr@{}}\toprule
+ & \multicolumn{2}{c}{Physical interval} & \multicolumn{2}{c}{Isolated, odd stride} & \multicolumn{2}{c}{Shuffled}\\
+$m$ & Mean & Max & Mean & Max & Mean & Max\\\midrule
+\EdgeRows\bottomrule
+\end{tabular}\end{center}
+
+All 715 odd-stride cases had exactly the same first-hit rank as their physical counterparts for each sieve. Before the solid interval's deadline every divisor-$m$ prefix key is even and is fixed by this encoding. This example establishes the logical boundary of the result: a solid interval is sufficient for the deadline. A scattered set can also be found reliably when the encoding preserves the early queries that intersect it.
+
+\newpage
+\sect{8}{Reindexing the earlier MaxCut energies}
+The 24 confirmation graphs came from six strata ($n=7,8,9$ vertices and edge probability 0.35 or 0.60, conditioned on connectedness). We used the same three starts per graph, $16\times16$ exact statevector energies and archived threshold $E_0-0.8(E_0-E_{\min})$ \cite{hybrid}. Relative key zero is the common, invalid start. The 72 target counts were 8 for 17 cases, 16 for 38, 24 for 12, and 32 for five.
+
+For each case we paired 32 seeded reindexings. The \emph{solid} layout places its $m$ valid energies in one block with start uniform on $1,\ldots,N-m$. The \emph{shuffled} layout assigns them to a uniform $m$-subset of keys $1,\ldots,N-1$. Each graph, start and draw receives equal weight within its level. Both layouts keep key zero's energy, threshold and entire energy multiset. The same two shuffled lists assign valid and invalid energies in key order under both treatments. Native indexing retains the physical circuit-angle map. The relabelings are controlled lookup-table experiments designed to test geometry. Constructing them requires offline knowledge of which points are valid.
+
+\captab{8}{Means on these 24 graphs, three starts and 32 paired draws per start. $L$ is capped first-hit time. H is the percentage meeting the energy target by 65 calls. Repeated native traces count once in the graph-level weighting.}
+\begin{center}\small\begin{tabular}{@{}lrrrrrr@{}}\toprule
+ & \multicolumn{2}{c}{Native} & \multicolumn{2}{c}{Shuffled} & \multicolumn{2}{c}{One solid block}\\
+Method & $L$ & H & $L$ & H & $L$ & H\\\midrule
+\ArchiveRows\bottomrule
+\end{tabular}\end{center}
+\begin{center}\includegraphics[width=.90\linewidth]{figures/matched_qaoa.pdf}\end{center}
+\capfig{6}{Same graph energies under three indexings. The move from native to solid reduced recursive mean capped time by 23.44 calls (paired graph-bootstrap 95\% interval 21.75 to 25.31 fewer). Solid versus shuffled saved 6.64 calls (6.06 to 7.24).}
+
+The recursive sieve hit on all 2,304 solid draws within $N/2^{\lfloor\log_2 m\rfloor}$ calls, including non-power-of-two $m=24$. With native indexing it hit in 44/72 cases by call 65. Shuffling also improved on native indexing while making no solid-block promise. The evidence isolates a benefit from planted alignment and also shows that features of the native angle mapping affected the original result.
+
+\newpage
+\sect{9}{Choosing a policy requires a model}
+If a problem specification guarantees a valid run of at least $\ell$ keys, budget $N/2^{\lfloor\log_2\ell\rfloor}$ paid dyadic queries for a guaranteed first hit (or stop upon an observed hit). With $B$ below that bound there is no guarantee from this argument. When calls remain after the bound and the target is still unmet, at least one premise about the run, encoding, evaluations or threshold has failed. This is a reason to reconsider the model before continuing local search. For clipped or unknown geometries the bound policy in this experiment had access to the nominal count $m$. A deployable guarantee requires an independently justified \emph{run length}.
+
+For an example of a distribution-dependent choice, suppose a future case is drawn from the specific \emph{native} archived law with probability $1-\pi$ and from the \emph{solid reindexing} law of Section 8 with probability $\pi$. State the budget and loss as before. For policy $j$,
+\[
+     L_j(\pi)=(1-\pi)L_{j,\mathrm{native}}+\pi L_{j,\mathrm{solid}}.
+\]
+Relative to pure Halton, pure recursive sampling cost 20.32 more capped calls on native inputs and saved 3.10 on solid reindexings. Their estimated crossover is therefore $\pi=20.32/(20.32+3.10)\simeq0.868$. This is a sensitivity calculation for two named populations and one loss. The graph-bootstrap interval for this crossover is 84.9--88.7\%. The prevalence on a future workload is unknown.
+
+\begin{center}\includegraphics[width=.81\linewidth]{figures/mixture.pdf}\end{center}
+\capfig{7}{Expected capped loss as the assumed mixture changes. Under these measured conditional losses, pure recursive sampling has the smaller mean to the right of the crossing. Altering the target law, the metadata given to a solver, or the cost assigned to a miss changes the comparison.}
+
+\subt{Reproduction and scope}
+The companion directory contains the first-hit ranks and full costs of 820,224 budgeted policy runs, exact counts, all 2,145 one-edge records, and reconstruction scripts. Synthetic intervals resample paired draws within design strata. Archived intervals resample whole graphs after averaging starts and remaps within each graph. Each interval uses 10,000 draws. The experiments measure noiseless classical queries. Hardware costs and the prevalence of each geometry require independent data.
+
+\begingroup\footnotesize
+\renewcommand{\refname}{\sffamily\small\color{teal}References}
+\begin{thebibliography}{9}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+\bibitem{original} P. Rikula. \emph{Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark}. 2026. \href{https://github.com/kummahiih/variational-quantum-algorithms/tree/0ab4abc6ea3a980cd86ac77447979b5e469b54d5/paper}{Manuscript and data}.
+\bibitem{hybrid} Variational Quantum Algorithms project. \emph{When should a sieve hand off to pattern search?} 2026. \href{https://github.com/kummahiih/variational-quantum-algorithms/tree/8b066ec58925dd05dda6712aa5943c4f8b4d4487/paper/hybrid}{Research draft, engine and graph records}.
+\bibitem{torczon} V. Torczon. On the convergence of pattern search algorithms. 1997. \href{https://doi.org/10.1137/S1052623493250780}{SIAM J. Optim. 7, 1--25}.
+\bibitem{farhi} E. Farhi, J. Goldstone and S. Gutmann. A Quantum Approximate Optimization Algorithm. 2014. \href{https://arxiv.org/abs/1411.4028}{arXiv:1411.4028}.
+\end{thebibliography}
+\endgroup
+{\footnotesize\textbf{Declaration of generative AI assistance.} OpenAI Codex implemented the simulation, ran the checks and drafted this manuscript at the project owner's request. This draft awaits author review.\par}
+\end{document}

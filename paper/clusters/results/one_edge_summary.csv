@@ -1,0 +1,10 @@
+valid_count,encoding,placements,mean_hit,worst_hit,min_longest_run,max_longest_run
+8,odd_stride,249,16.935742972,32,1,1
+8,physical,249,16.935742972,32,8,8
+8,shuffled,249,27.333333333,153,1,3
+16,odd_stride,241,8.966804979,16,1,1
+16,physical,241,8.966804979,16,16,16
+16,shuffled,241,15.767634855,74,1,4
+32,odd_stride,225,4.982222222,8,1,1
+32,physical,225,4.982222222,8,32,32
+32,shuffled,225,8.217777778,57,1,5

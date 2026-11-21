@@ -1,0 +1,9 @@
+bits,a,b,capped_calls_a_minus_b,lo95,hi95,fixed_width_count_strata,replicates_per_stratum
+4,dominant/membership/recursive,balanced/membership/recursive,-2.248333333,-3.018333333,-1.509916667,100,6
+5,dominant/membership/recursive,balanced/membership/recursive,-3.729810997,-4.110395189,-3.347927405,388,6
+4,unequal/membership/recursive,balanced/membership/recursive,-0.506666667,-1.211708333,0.200000000,100,6
+5,unequal/membership/recursive,balanced/membership/recursive,-1.272766323,-1.647777062,-0.895189003,388,6
+4,unequal/membership/recursive13,unequal/membership/recursive,8.431666667,7.221666667,9.700000000,100,6
+5,unequal/membership/recursive13,unequal/membership/recursive,8.425257732,7.815721649,9.048109966,388,6
+4,unequal/distance/pattern,unequal/membership/pattern,-26.640000000,-28.630125000,-24.650000000,100,6
+5,unequal/distance/pattern,unequal/membership/pattern,-28.011597938,-28.996134021,-27.020167526,388,6

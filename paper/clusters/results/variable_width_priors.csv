@@ -1,0 +1,5 @@
+size,order,min_width,max_width,all_placements,mean_uniform_width_then_start,mean_uniform_width_start_pair
+256,original,8,32,5925,9.089196214,9.187679325
+256,recursive,8,32,5925,9.089196214,9.187679325
+1024,original,32,128,91665,9.056917051,9.149326351
+1024,recursive,32,128,91665,9.056917051,9.149326351
