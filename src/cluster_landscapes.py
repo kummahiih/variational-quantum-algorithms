@@ -170,14 +170,18 @@ class Relabeling:
     valid: frozenset[int]
 
 
-def relabel_energies(values: Sequence[float], target: float, rng: Random
-                     ) -> tuple[Relabeling, Relabeling]:
-    """Paired solid/uniform layouts, with the same energy multiset and initial energy.
+def relabel_energies(
+    values: Sequence[float], target: float, rng: Random, *, control: str = "uniform",
+) -> tuple[Relabeling, Relabeling]:
+    """Pair a solid block with a uniform or strictly isolated control layout.
 
     Key zero is the common paid start and must be invalid. Both layouts use the
     identical shuffled lists of valid and invalid energies. Only their assigned
-    locations change. The threshold is the archived graph/start threshold.
+    locations change. Isolation means a gap between each pair of successive
+    targets in linear key order. Both placements condition on zero being invalid.
     """
+    if control not in ("uniform", "isolated"):
+        raise ValueError("control must be uniform or isolated")
     if not values or values[0] <= target + ENERGY_TOLERANCE:
         raise ValueError("the designated start must be invalid")
     good = [v for v in values[1:] if v <= target + ENERGY_TOLERANCE]
@@ -188,7 +192,11 @@ def relabel_energies(values: Sequence[float], target: float, rng: Random
     rng.shuffle(bad)
     n, m = len(values), len(good)
     a = rng.randint(1, n-m)
-    masks = (frozenset(range(a, a+m)), frozenset(rng.sample(range(1, n), m)))
+    solid = frozenset(range(a, a+m))
+    if control == "isolated":
+        control_mask = frozenset(k + 1 for k in equal_runs(n-1, m, m, rng))
+    else:
+        control_mask = frozenset(rng.sample(range(1, n), m))
 
     def assign(mask):
         hits, misses = iter(good), iter(bad)
@@ -196,4 +204,4 @@ def relabel_energies(values: Sequence[float], target: float, rng: Random
         ordered.extend(next(hits) if k in mask else next(misses) for k in range(1, n))
         return Relabeling(tuple(ordered), mask)
 
-    return assign(masks[0]), assign(masks[1])
+    return assign(solid), assign(control_mask)

@@ -1,0 +1,151 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[top=18mm,bottom=19mm,left=22mm,right=22mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,booktabs,xcolor,hyperref,csvsimple,pgfplots}
+\pgfplotsset{compat=1.18}
+\definecolor{ink}{HTML}{20343D}
+\definecolor{sieve}{HTML}{08766D}
+\definecolor{shuffle}{HTML}{A94B17}
+\hypersetup{colorlinks=true,urlcolor=sieve,
+  pdftitle={When should a recursive sieve hand off to pattern search?}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\newcommand{\heading}[1]{\par\medskip{\large\sffamily\bfseries\color{ink}#1}\par}
+\newcommand{\subhead}[1]{\par\smallskip{\sffamily\bfseries\color{ink}#1}\par}
+
+% Read the primary curves directly from the archived output. Columns 1–6 are
+% pilot, layout, paid call, number of pairs, recursive hit rate, random hit rate.
+\def\recsolid{}\def\recisolated{}\def\randsolid{}\def\randisolated{}
+\csvreader{../../results/handoff/hit_curve.csv}
+  {1=\pilotlength,2=\keylayout,3=\paidcall,5=\rechit,6=\randhit}{%
+  \ifnum\pilotlength=16\relax
+    \expandafter\xdef\csname rec\keylayout\endcsname{\csname rec\keylayout\endcsname(\paidcall,\rechit)}
+    \expandafter\xdef\csname rand\keylayout\endcsname{\csname rand\keylayout\endcsname(\paidcall,\randhit)}
+  \fi}
+\newcommand{\panel}[2]{%
+  \begin{tikzpicture}
+  \begin{axis}[width=.46\linewidth,height=43mm,scale only axis=false,
+    title={#2},title style={font=\small\sffamily\bfseries},
+    xmin=1,xmax=65,ymin=0,ymax=1,xtick={1,16,32,48,65},
+    ytick={0,.25,.5,.75,1},yticklabels={0,25,50,75,100},
+    tick label style={font=\footnotesize},xlabel={Paid objective calls},
+    xlabel style={font=\footnotesize},ylabel={Hit by call (\%)},ylabel style={font=\footnotesize},
+    grid=major,grid style={gray!20},axis line style={gray!65},tick align=outside]
+  \draw[gray,densely dotted] (axis cs:16.5,0) -- (axis cs:16.5,1);
+  \edef\drawrec{\noexpand\addplot[const plot,no marks,sieve,line width=1.2pt]
+    coordinates {\csname rec#1\endcsname};}\drawrec
+  \edef\drawrand{\noexpand\addplot[const plot,no marks,shuffle,dashed,line width=1.05pt]
+    coordinates {\csname rand#1\endcsname};}\drawrand
+  \end{axis}\end{tikzpicture}}
+
+\begin{document}
+{\sffamily\bfseries\fontsize{22}{25}\selectfont\color{ink}\raggedright
+When should a recursive sieve hand off to pattern search?\par}
+{\large Clustered and isolated targets on matched QAOA energy grids\par}
+{\small Research draft for Pauli Rikula \hfill 21 November 2026\par}
+\smallskip{\color{sieve}\rule{\linewidth}{0.9pt}}
+
+\heading{The starting order changes which targets are found}
+We compared two ways to spend the first 16 calls of a 65-call search. One visited
+keys in recursive dyadic order and the other drew keys in random order without
+replacement. Both then ran the same local pattern search from their best point.
+On one solid block of targets, the recursive start found a target by call 65 in
+88.6\% of placements, against 73.1\% for random. Isolating the same number of
+targets reversed the ranking (77.5\% against 81.6\%). Each comparison paired
+2,304 placements across 24 evaluation graphs.
+
+\subhead{Table 1. First hits on the evaluation graphs}
+\begin{center}\small
+\begin{tabular}{llrrrr}
+\toprule
+& & \multicolumn{2}{c}{Hit by call 65} & \multicolumn{2}{c}{Difference in mean loss (calls)}\\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+Pilot & Target layout & Recursive & Random & Rec.\ $-$ random & 95\% interval\\
+\midrule
+16 & Solid block     & 88.6\% & 73.1\% & $-9.91$ & $[-11.54,-8.40]$\\
+16 & Isolated keys   & 77.5\% & 81.6\% & $+2.03$ & $[+0.84,+3.16]$\\
+\addlinespace
+20 & Solid block     & 91.9\% & 78.4\% & $-9.25$ & $[-10.53,-8.03]$\\
+20 & Isolated keys   & 81.0\% & 84.3\% & $+1.49$ & $[+0.38,+2.58]$\\
+\bottomrule
+\end{tabular}
+\end{center}
+{\small Loss is the first target call, assigning 66 to a miss. Negative differences
+favor the recursive start. The 16-call comparison was fixed in advance.
+Calibration selected 20 on separate graphs. Intervals resample whole graphs.\par}
+
+\subhead{Figure 1. Pace of discovery with a 16-call pilot}
+\begin{center}
+\panel{solid}{One solid block}\hfill\panel{isolated}{Isolated keys}\\[-1pt]
+{\small\sffamily\color{sieve}\rule[2pt]{12pt}{1.3pt} Recursive start
+\qquad\color{shuffle}\tikz{\draw[dashed,line width=1.05pt] (0,0)--(.45,0);} Random start}
+\end{center}
+{\small The dotted line separates the pilot from the first local poll on call 17.
+Each curve includes every placement through call 65, including early-converged
+misses. On solid blocks, most of the recursive advantage was already present
+at handoff. On isolated keys, the gap widened during local polling.\par}
+
+\newpage
+\heading{Measuring the handoff}
+We used two disjoint cohorts of 24 MaxCut graphs with 7--9 vertices. For each
+graph, an exact one-layer QAOA simulation supplied 256 energies on a periodic
+$16\times16$ angle grid. For each of three initial points, the target threshold
+was $E_0-0.8(E_0-E_{\min})$ with tolerance $10^{-12}$. Each of 32 paired draws
+kept the initial energy, the multiset of energies and the target count fixed.
+The target energies occupied either one uniformly placed block or a uniform
+set of pairwise nonconsecutive keys in linear Morton order. Key zero was the
+common invalid start. Reindexing changes the angular neighborhoods, so the
+comparison measures performance on these planted layouts.
+
+Call 1 paid for the start. At handoff each method retained its evaluated
+incumbent and polled four wrapped angle neighbors per step, halving the step
+after an unsuccessful group. Repeated polls counted. At a 16-call recursive
+handoff the four initial local polls revisited the coarse lattice. The runner
+scored the first successful evaluation even if polling continued afterward.
+
+\subhead{Table 2. Stage of the first hit}
+\begin{center}\small
+\begin{tabular}{llrrrrrr}
+\toprule
+&&\multicolumn{3}{c}{Recursive start}&\multicolumn{3}{c}{Random start}\\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Pilot & Layout & Pilot & Local & Miss & Pilot & Local & Miss\\
+\midrule
+16 & Solid    & 2,005 & 36  & 263 & 1,417 & 267 & 620\\
+16 & Isolated & 1,416 & 370 & 518 & 1,435 & 444 & 425\\
+20 & Solid    & 2,085 & 33  & 186 & 1,610 & 196 & 498\\
+20 & Isolated & 1,594 & 272 & 438 & 1,601 & 342 & 361\\
+\bottomrule
+\end{tabular}
+\end{center}
+At 16 calls, polling added 36 first hits on 299 solid cases still at risk after
+the recursive pilot. With random initialization it added 267 on 887. On
+isolated keys the corresponding counts were 370 on 888 and 444 on 869.
+Table~1 intervals use 2,000 paired bootstrap resamples of graphs within the six
+size/density strata, keeping starts and placements together.
+
+\heading{How long to keep sieving}
+When at least one consecutive target run has length $L$, the zero-first
+recursive sieve on $N=2^n$ keys guarantees a hit by
+$D(L)=N/2^{\lfloor\log_2 L\rfloor}$ calls. The first $2^j$ probes are spaced
+$N/2^j$ apart, so every run of that length contains a probe.
+All 1,760 evaluation blocks of width 16, 24 or 32 were hit in the first
+16 recursive calls. On the 544 width-eight blocks the 16-call hybrid had
+245 pilot hits, 36 local hits and 263 misses. Continuing the sieve through
+call 32 would guarantee a hit on every solid placement in this evaluation set.
+For isolated targets, $L=1$ gives a deadline of 256.
+
+For unknown layout, calibration minimized the mean of $\min(T_k,66)$ over both
+layouts. For a pilot of length $k$, $T_k$ counts calls through the first
+target in either stage ($T_k=\infty$ on a miss). For $k=12,14,16,18,20$, the respective
+mean losses were 23.57, 21.52, 19.35, 18.45 and 17.69. Twenty was the
+best tested cutoff and the upper endpoint. The loss at longer cutoffs remains open.
+
+{\footnotesize\smallskip
+\textbf{Reproduction.} The \href{https://github.com/kummahiih/variational-quantum-algorithms/tree/cf6758371ddac34910474ade050eb5357326376f/results/handoff}{archived run records and per-call curves}
+and \href{https://github.com/kummahiih/variational-quantum-algorithms/blob/8c4acad88fc133a4b9d4ece7675024ae7a4ad767/paper/handoff/README.md}{prespecified comparison and runner instructions} are public.
+The \href{https://github.com/kummahiih/variational-quantum-algorithms/tree/a3444d4b071942ead4f008fb10b61a61e7449a4c/paper/clusters}{companion study} describes the earlier 13-call comparison.
+The project owner supplied the simulation output. OpenAI Codex assisted with
+implementation, analysis and manuscript drafting. This draft awaits author review.\par}
+\end{document}
