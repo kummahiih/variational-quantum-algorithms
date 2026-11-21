@@ -19,6 +19,8 @@ The two follow-up papers test this question on the same 24 MaxCut graphs and thr
 
 The figures are target-hit rates by 65 evaluations. The planted comparison reindexes exact simulated energies and preserves the starting energy, target count and threshold. The [nonclustered baseline paper](paper/hybrid/hybrid_qaoa.pdf) describes the optimizer and the switch timing. The [matched comparison paper](paper/clusters/cluster_assumption.pdf) shows the starter comparison on page 1 and the handoff counts for variable-size blocks on page 6. See the [optimizer](src/hybrid_qaoa.py) and [reproducible simulation](paper/clusters/README.md).
 
+The [16-call handoff experiment](paper/handoff/README.md) compares recursive and random-order starts followed by identical pattern search on matched solid and isolated target keys. Its runner measures first hits before and after the switch and calibrates the pilot length on a separate set of graphs.
+
 ## Layout
 
 - `docs/` — notes and mathematical background
