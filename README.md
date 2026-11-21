@@ -84,4 +84,8 @@ python -m unittest discover -s tests -v
 lake -d lean build
 ```
 
-A potential future experiment is *recursive-sieve multistart plus pattern search*, compared with random/original-sieve multistart under identical energy-evaluation budgets. **This hybrid has not been implemented or benchmarked.** See [the working model](docs/working_model.md) and [research journal](docs/journal.md).
+## Hybrid angle optimizer and follow-up paper
+
+The [hybrid optimizer](src/hybrid_qaoa.py) spends a configurable share of its energy budget on angle sampling and hands the best point to pattern search. It supports seven starting schedules, fixed splits, patience and a history-based checkpoint. The historical first-hit curves motivated a 13-call pilot out of 65. On a fresh 24-graph confirmation set, fixed Halton-13 reached 66/72 targets, fixed Halton-33 reached 72/72, and immediate polling reached 49/72. The shorter Halton pilot reached more targets by call 20. All first hits for Halton-33 occurred during the pilot.
+
+Read the [follow-up research paper](paper/hybrid/hybrid_qaoa.pdf) or [use the optimizer and reproduce the comparison](paper/hybrid/README.md). This experiment uses one local continuation from the best pilot point. Multiple independent local restarts remain a separate research question.
