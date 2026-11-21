@@ -4,7 +4,7 @@ A lightweight study project exploring variational quantum algorithms (VQAs), wit
 
 ## Preprint
 
-**Pauli Rikula**, *Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark*. [Zenodo record 24382960](https://zenodo.org/records/24382960) (author-provided publication link).
+**Pauli Rikula**, *Coarse-to-Fine Dyadic Sampling: An Exact First-Hit Result and an Exploratory QAOA Benchmark*. [Zenodo record 24382960](https://zenodo.org/records/24382960) · [DOI 10.5281/zenodo.24382960](https://doi.org/10.5281/zenodo.24382960).
 
 The preprint is a research note, not a peer-reviewed journal article. The [paper PDF](paper/dyadic_qaoa_note.pdf), [editable LaTeX source](paper/source/dyadic_qaoa_note.tex), and [reproducibility materials](paper/README.md) are available in this repository. No quantum hardware performance or quantum speedup is claimed.
 
