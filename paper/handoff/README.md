@@ -2,6 +2,21 @@
 
 This experiment compares **recursive sieve → pattern search** with **random permutation → pattern search**. The primary comparison spends 16 of 65 objective evaluations on each starter. Call 1 pays for the common initial point. Call 17 polls a neighbor of the best point from calls 1–16. The first outcome is the number of calls until either stage evaluates a target.
 
+[Read the two-page research draft (PDF)](paired_handoff.pdf) · [Editable LaTeX](paired_handoff.tex) · [Archived simulation output](../../results/handoff)
+
+## Evaluation results
+
+Each row represents 2,304 paired placements on 24 graphs. The mean loss counts a miss as 66 calls. Negative differences favor the recursive start.
+
+| Pilot | Layout | Recursive hit by 65 | Random hit by 65 | Recursive minus random mean loss, calls (95% graph-bootstrap interval) |
+| ---: | --- | ---: | ---: | ---: |
+| 16 | Solid | 88.6% | 73.1% | −9.91 (−11.54 to −8.40) |
+| 16 | Isolated | 77.5% | 81.6% | +2.03 (+0.84 to +3.16) |
+| 20 | Solid | 91.9% | 78.4% | −9.25 (−10.53 to −8.03) |
+| 20 | Isolated | 81.0% | 84.3% | +1.49 (+0.38 to +2.58) |
+
+On solid blocks the 16-call recursive pilot found 2,005 first hits, and local polling added 36. All 263 misses came from width-eight blocks. A 32-call recursive prefix covers every solid width represented in this cohort. On isolated keys the same pilot found 1,416 first hits, and polling added 370. Calibration loss decreased at every tested cutoff from 12 to 20. Its minimum over longer pilots remains open.
+
 ## Run the comparison
 
 From the repository root, with Python 3.11 or newer, run a two-graph check first. The full run uses 24 calibration graphs, 24 evaluation graphs, three starts per graph and 32 paired placements per start. The runner prints progress after each graph and prints the selected handoff before evaluating it.
@@ -54,4 +69,4 @@ Each graph, start, draw and layout contributes equal weight. A miss after early 
 | `comparison.csv` | Evaluation counts of first hits during the pilot, first hits during polling, and misses. The paired difference in mean loss is recursive minus random, in calls. Negative favors recursive. The 95% percentile interval resamples whole graphs within size/density strata 2,000 times, keeping both methods, starts and placements together. It is blank when a represented stratum has fewer than two graphs. |
 | `hit_curve.csv` | Fraction of paired cases that have hit by each paid call, separately for both starters, each layout, and each evaluated handoff. The denominator includes early-converged misses. |
 
-Report the fixed-16 row for each layout first. The calibrated rows measure how well the timing rule transfers across graphs. If calibration also selects 16, one row per layout represents both comparisons.
+To rebuild the paper and its figure from the archived curves, run `pdflatex -halt-on-error paired_handoff.tex` twice from `paper/handoff/` with TeX Live, including PGFPlots and csvsimple.
